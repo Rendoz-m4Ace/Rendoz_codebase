@@ -1,3 +1,4 @@
+import HeroSection from "@/component/HeroSection";
 import TrustFeatures from "@/component/TrustFeatures";
 import HowItWorks from "@/component/HowItWorks";
 import FAQSection from "@/component/FAQSection";
@@ -8,8 +9,7 @@ import MarketPlace from "@/component/MarketPlace";
 export default function Home() {
   return (
     <main>
-      <RentCategory />
-      <MarketPlace />
+      <HeroSection />
       <TrustFeatures />
       <HowItWorks />
       <FAQSection />
