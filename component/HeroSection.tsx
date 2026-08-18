@@ -49,54 +49,69 @@ export default function HeroSection () {
           <div className="relative h-[420px]">
 
           {/* Camera */}
-          <div className="absolute top-0 right-8 bg-amber-800 rounded-xl rotate-[-6deg] shadow-lg w-52 h-30 p-3">
-            <div className="flex items-center gap-2">
+          <div className="absolute top-0 right-30 bg-neutral-500  rotate-[-6deg] shadow-lg w-52 h-30 p-3">
+            <Image
+            src ="/images/camera.webp" alt="Camera" fill sizes="208px" className="object-cover rounded-xl"
+            />
+            <div className="absolute inset-0 bg-black/50"  />
+            <div className="relative flex items-center gap-2 p-3">
               <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
                 <Camera className="w-4 h-4 text-amber-800" />
               </span>
               <span className="text-white font-semibold text-sm">Camera</span>
             </div>
-            <p className="text-xs text-white/80 mt-2 flex items-center gap-1">
+            <p className="relative text-xs text-white/80 mt-2 flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Coming soon
             </p>
           </div>
 
           {/* Bike */}
-          <div className="absolute top-20 left-8 bg-stone-400 rounded-xl shadow-lg rotate-[5deg] w-52 h-30 p-3">
-            <div className="flex items-center gap-2">
+          <div className="absolute top-30 left-80 bg-amber-200 rounded-xl shadow-lg rotate-[5deg] w-52 h-30 p-3">
+             <Image
+            src ="/images/bicycle.webp" alt="bicycle" fill sizes="208px" className="object-cover rounded-xl"
+            />
+             <div className="absolute inset-0 bg-black/50"  />
+            <div className="relative flex items-center gap-2 p-5">
               <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
-                <Bike className="w-4 h-4 text-purple-700" />
+                <Bike className="w-4 h-4 text-black" />
               </span>
-              <span className="text-white font-semibold text-sm">Road Bike</span>
+              <span className="text-black font-semibold text-sm">Road Bike</span>
             </div>
-            <p className="text-xs text-white/80 mt-2 flex items-center gap-1">
+            <p className="relative text-xs text-black/80 mt-2 flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Coming soon
             </p>
           </div>
 
           {/* Power drill */}
-          <div className="absolute top-50 right-30 bg-stone-500 rounded-xl shadow p-3 rotate-[-3deg] w-52 h-30">
-            <div className="flex items-center gap-2">
+          <div className="absolute top-60 right-30 bg-stone-300 rounded-xl shadow p-3 rotate-[-3deg] w-52 h-30">
+            <Image
+            src ="/images/power.jpg" alt="power" fill sizes="208px" className="object-cover rounded-xl"
+            /> 
+            <div className="relative flex items-center gap-2 p-5">
               <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
                 <Zap className="w-4 h-4 text-stone-500" />
               </span>
               <span className="text-white font-semibold text-sm">Power Drill</span>
             </div>
-            <p className="text-xs text-white/80 mt-2 flex items-center gap-1">
+            <p className="relative text-xs text-/80 mt-2 flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Coming soon
             </p>
           </div>
 
           {/* Laptop */}
-          <div className="absolute top-70 right-0 bg-purple-400 rounded-xl shadow p-3 rotate-[4deg] w-52 h-32">
-            <div className="flex items-center gap-2">
+          <div className="absolute top-85 right-0 bg-fuchsia-600 rounded-xl shadow p-3 rotate-[4deg] w-52 h-32">
+             <Image
+            src ="/images/lap1.webp" alt="laptop" fill sizes="208px" className="object-cover rounded-xl"
+            />
+             <div className="absolute inset-0 bg-black/50"  />
+            <div className="relative flex items-center gap-2 p-5">
               <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
                 <Laptop className="w-4 h-4 text-gray-700" />
               </span>
               <span className="text-white font-semibold text-sm">Laptop</span>
             </div>
-            <p className="text-xs text-white/80 mt-2 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Ready to Rent
+            <p className="relative text-xs text-white/80 mt-2 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Coming soon
             </p>
           </div>
       </div>
