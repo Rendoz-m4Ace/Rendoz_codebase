@@ -3,123 +3,159 @@ import Why from "./why";
 import What from "./what";
 import { Camera, Bike, Zap, Laptop } from "lucide-react";
 
-export default function HeroSection () {
-    return (
-        <main className="flex-1">
-      <section className="bg-slate-100">
-        <div className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-10 items-center">
+
+export default function HeroSection() {
+  return (
+    <main className="flex-1">
+      <section className="bg-[#dfe3f3]">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-6 py-16 md:min-h-[29rem] md:grid-cols-[52%_48%] md:gap-0 md:py-10">
           {/* Left: text */}
           <div>
             <span className="inline-block text-xs font-medium bg-orange-100 text-orange-600 px-3 py-1 rounded-full">
               COMING SOON
             </span>
 
-            <h1 className="text-4xl md:text-5xl font-bold mt-4 leading-tight text-slate-900">
+            <h1 className="mt-4 max-w-[410px] text-4xl font-bold leading-[1.08] text-slate-900 md:text-[38px]">
               Rent What You Need. Earn From What You Own.
             </h1>
 
-            <p className="mt-4 text-slate-600 max-w-md">
-              Rendoz makes it easy to find and rent the things you need
-              without having to buy them. Access useful items for as long
-              as you need them, then return them when you&apos;re done.
+            <p className="mt-4 max-w-[390px] text-[11px] leading-[1.35] text-slate-600">
+              Rendoz makes it easy to find and rent the things you need without
+              having to buy them. Access useful items for as long as you need
+              them, then return them when you&apos;re done.
             </p>
 
-            <p className="mt-6 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <p className="mt-5 text-[9px] font-semibold uppercase tracking-wide text-orange-500">
               Get Early Access
             </p>
 
-            <form className="mt-2 flex flex-col sm:flex-row gap-3">
+            <form className="mt-1 flex max-w-[270px] flex-col gap-2 sm:flex-row">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 border border-slate-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-[9px] focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
               <button
                 type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-6 py-2 rounded-full transition"
+                className="rounded-full bg-orange-500 px-4 py-1.5 text-[9px] font-medium text-white transition hover:bg-orange-600"
               >
                 Join the waitlist
               </button>
             </form>
 
-            <p className="mt-3 text-xs text-slate-400">
+            <p className="mt-2 text-[9px] text-slate-400">
               Built for owners and renters
             </p>
           </div>
-          <div className="relative h-[420px]">
-
-          {/* Camera */}
-          <div className="absolute top-0 right-30 bg-neutral-500  rotate-[-6deg] shadow-lg w-52 h-30 p-3">
-            <Image
-            src ="/images/camera.webp" alt="Camera" fill sizes="208px" className="object-cover rounded-xl"
-            />
-            <div className="absolute inset-0 bg-black/50"  />
-            <div className="relative flex items-center gap-2 p-3">
-              <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
-                <Camera className="w-4 h-4 text-amber-800" />
-              </span>
-              <span className="text-white font-semibold text-sm">Camera</span>
+          <div className="relative grid w-full grid-cols-1 gap-5 py-4 min-[420px]:grid-cols-2 md:block md:min-h-[22rem] md:py-0">
+            {/* Camera */}
+            <div className="relative h-32 w-full overflow-hidden rounded-xl  p-2 shadow-lg rotate-[-3deg] min-[420px]:rotate-[-6deg] md:absolute md:left-[16%] md:top-0 md:h-24 md:w-40">
+              <Image
+                src="/images/camera.png"
+                alt="Camera"
+                fill
+                sizes="208px"
+                className="object-cover rounded-xl"
+              />
+              <div className="absolute inset-0 bg-black/30" />
+              <div className="relative">
+                <div className="relative flex items-center gap-1 p-2">
+                  <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
+                    <Camera className="h-3 w-3 text-black" />
+                  </span>
+                  <span className="text-[12px] font-semibold text-black">Camera</span>
+                </div>
+                <p className="relative flex items-center gap-1 text-[10px] text-black">
+                  <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" />{" "}
+                  Coming soon
+                </p>
+                </div>
             </div>
-            <p className="relative text-xs text-white/80 mt-2 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Coming soon
-            </p>
-          </div>
 
-          {/* Bike */}
-          <div className="absolute top-30 left-80 bg-amber-200 rounded-xl shadow-lg rotate-[5deg] w-52 h-30 p-3">
-             <Image
-            src ="/images/bicycle.webp" alt="bicycle" fill sizes="208px" className="object-cover rounded-xl"
-            />
-             <div className="absolute inset-0 bg-black/50"  />
-            <div className="relative flex items-center gap-2 p-5">
-              <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
-                <Bike className="w-4 h-4 text-black" />
-              </span>
-              <span className="text-black font-semibold text-sm">Road Bike</span>
+            {/* Bike */}
+            <div className="relative h-32 w-full overflow-hidden rounded-xl bg-amber-200 p-2 shadow-lg rotate-[3deg] min-[420px]:rotate-[5deg] md:absolute md:left-[44%] md:top-16 md:h-24 md:w-40">
+              <Image
+                src="/images/bike.png"
+                alt="bike"
+                fill
+                sizes="208px"
+                className="object-cover rounded-xl"
+              />
+              <div className="absolute inset-0 bg-black/30" />
+              <div className="relative">
+                <div className="relative flex items-center gap-1 p-2">
+                  <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
+                    <Bike className="h-3 w-3 text-black" />
+                  </span>
+                  <span className="text-[12px] font-semibold text-black">
+                    Road Bike
+                  </span>
+                </div>
+                <p className="relative flex items-center gap-1 text-[10px] text-black">
+                  <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" />
+                  Coming soon
+                </p>
+              </div>  
             </div>
-            <p className="relative text-xs text-black/80 mt-2 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Coming soon
-            </p>
-          </div>
 
-          {/* Power drill */}
-          <div className="absolute top-60 right-30 bg-stone-300 rounded-xl shadow p-3 rotate-[-3deg] w-52 h-30">
-            <Image
-            src ="/images/power.jpg" alt="power" fill sizes="208px" className="object-cover rounded-xl"
-            /> 
-            <div className="relative flex items-center gap-2 p-5">
-              <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-stone-500" />
-              </span>
-              <span className="text-white font-semibold text-sm">Power Drill</span>
+            {/* Power drill */}
+            <div className="relative h-32 w-full overflow-hidden rounded-xl p-2 shadow-lg rotate-[-2deg] md:absolute md:left-[16%] md:top-[10.5rem] md:h-24 md:w-40">
+              <Image
+                src="/images/drill.png"
+                alt="power"
+                fill
+                sizes="208px"
+                className="object-cover rounded-xl"
+              />
+              <div className="absolute inset-0 bg-black/30" />
+              <div className="relative">
+                <div className="relative flex items-center gap-1 p-2">
+                  <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
+                    <Zap className="h-3 w-3 text-black" />
+                  </span>
+                  <span className="text-[12px] font-semibold text-black">
+                    Power Drill
+                  </span>
+                </div>
+              <p className="relative flex items-center gap-1 text-[10px] text-black">
+                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" />
+                Coming soon
+              </p>
+              </div>
             </div>
-            <p className="relative text-xs text-/80 mt-2 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Coming soon
-            </p>
-          </div>
 
-          {/* Laptop */}
-          <div className="absolute top-85 right-0 bg-fuchsia-600 rounded-xl shadow p-3 rotate-[4deg] w-52 h-32">
-             <Image
-            src ="/images/lap1.webp" alt="laptop" fill sizes="208px" className="object-cover rounded-xl"
-            />
-             <div className="absolute inset-0 bg-black/50"  />
-            <div className="relative flex items-center gap-2 p-5">
-              <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
-                <Laptop className="w-4 h-4 text-gray-700" />
-              </span>
-              <span className="text-white font-semibold text-sm">Laptop</span>
+            {/* Laptop */}
+            <div className="relative h-40 w-full overflow-hidden rounded-xl p-2 shadow-lg rotate-[3deg] min-[420px]:rotate-[4deg] md:absolute md:left-[43%] md:top-[13.5rem] md:h-24 md:w-40">
+              <Image
+                src="/images/laptop.png"
+                alt="laptop"
+                fill
+                sizes="208px"
+                className="object-cover rounded-xl"
+              />
+              <div className="absolute inset-0 bg-black/30" />
+              <div className="relative">
+                <div className="relative flex items-center gap-1 p-2">
+                <span className="bg-white rounded-full p-1.5 flex items-center justify-center">
+                  <Laptop className="h-3 w-3 text-black" />
+                </span>
+                <span className="text-[12px] font-semibold text-black">
+                  Laptop
+                </span>
+                </div>
+              <p className="relative flex items-center gap-1 text-[10px] text-black">
+                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" />
+                Coming soon
+              </p>
+              </div>
             </div>
-            <p className="relative text-xs text-white/80 mt-2 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" /> Coming soon
-            </p>
           </div>
-      </div>
-      </div>  
-    </section>
-    <Why />
-    <What /> 
-  </main>
+        </div>
+      </section>
+      <Why />
+      <What />
+    </main>
   );
 }
-    
+
+
