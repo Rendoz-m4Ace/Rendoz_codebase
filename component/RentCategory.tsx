@@ -1,6 +1,6 @@
 export default function RentCategory() {
   return (
-    <section className="max-w-6xl mx-auto px-6 py-16">
+    <section className="max-w-6xl mx-auto px-6 py-16 bg-white">
       <div className="mb-10">
         <p className="text-orange-600 font-heading font-semibold text-sm tracking-wide">
           What can you rent
@@ -23,7 +23,9 @@ export default function RentCategory() {
             className="w-full h-60 object-cover rounded-[16px]"
           />
           <div className="p-4">
-            <h3 className="font-heading font-bold text-slate-800 md:text-lg">Vehicles</h3>
+            <h3 className="font-heading font-bold text-slate-800 md:text-lg">
+              Vehicles
+            </h3>
             <p className="text-slate-800 text-xs md:text-sm mt-1">
               Cars, bikes, and more for travel, work, or adventure.
             </p>
@@ -37,7 +39,9 @@ export default function RentCategory() {
             className="w-full h-60 object-cover rounded-[16px]"
           />
           <div className="p-4">
-            <h3 className="font-heading font-bold text-slate-800 md:text-lg">Tools & Equipment</h3>
+            <h3 className="font-heading font-bold text-slate-800 md:text-lg">
+              Tools & Equipment
+            </h3>
             <p className="text-slate-800 text-xs md:text-sm mt-1">
               Perfect for home projects, repairs, and professional work.
             </p>
@@ -51,7 +55,9 @@ export default function RentCategory() {
             className="w-full h-60 object-cover rounded-[16px]"
           />
           <div className="p-4">
-            <h3 className="font-heading font-bold text-slate-800 md:text-lg">Cameras & Photography</h3>
+            <h3 className="font-heading font-bold text-slate-800 md:text-lg">
+              Cameras & Photography
+            </h3>
             <p className="text-slate-800 text-xs md:text-sm mt-1">
               Rent cameras and photography equipment when you need them.
             </p>
@@ -65,7 +71,9 @@ export default function RentCategory() {
             className="w-full h-60 object-cover rounded-[16px]"
           />
           <div className="p-4">
-            <h3 className="font-heading font-bold text-slate-800 md:text-lg">Electronics</h3>
+            <h3 className="font-heading font-bold text-slate-800 md:text-lg">
+              Electronics
+            </h3>
             <p className="text-slate-800 text-xs md:text-sm mt-1">
               Laptops, speakers, consoles, and more for work or entertainment.
             </p>
@@ -79,7 +87,9 @@ export default function RentCategory() {
             className="w-full h-60 object-cover rounded-[16px]"
           />
           <div className="p-4">
-            <h3 className="font-heading font-bold text-slate-800 md:text-lg">Fashion</h3>
+            <h3 className="font-heading font-bold text-slate-800 md:text-lg">
+              Fashion
+            </h3>
             <p className="text-slate-800 text-xs md:text-sm mt-1">
               Rent all kinds of fashion items when you need them.
             </p>
@@ -93,7 +103,9 @@ export default function RentCategory() {
             className="w-full h-60 object-cover rounded-[16px]"
           />
           <div className="p-4">
-            <h3 className="font-heading font-bold text-slate-800 md:text-lg">Furniture</h3>
+            <h3 className="font-heading font-bold text-slate-800 md:text-lg">
+              Furniture
+            </h3>
             <p className="text-slate-800 text-xs md:text-sm mt-1">
               Furnish a space temporarily, no long-term commitment needed.
             </p>
@@ -107,7 +119,9 @@ export default function RentCategory() {
             className="w-full h-60 object-cover rounded-[16px]"
           />
           <div className="p-4">
-            <h3 className="font-heading font-bold text-slate-800 md:text-lg">Event</h3>
+            <h3 className="font-heading font-bold text-slate-800 md:text-lg">
+              Event
+            </h3>
             <p className="text-slate-800 text-xs md:text-sm mt-1">
               Get what you need for your next event without buying everything.
             </p>
@@ -121,7 +135,9 @@ export default function RentCategory() {
             className="w-full h-60 object-cover rounded-[16px]"
           />
           <div className="p-4">
-            <h3 className="font-heading font-bold text-slate-800 md:text-lg">Generator</h3>
+            <h3 className="font-heading font-bold text-slate-800 md:text-lg">
+              Generator
+            </h3>
             <p className="text-slate-800 text-xs md:text-sm mt-1">
               Rent generator when you need them.
             </p>
