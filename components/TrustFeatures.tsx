@@ -35,14 +35,17 @@ export default function TrustFeatures() {
       <p className="text-xs font-semibold tracking-widest text-orange-500 uppercase mb-3">
         Trust &amp; Safety
       </p>
-      <h2 className="text-3xl md:text-4xl font-bold text-white mb-14 max-w-lg leading-tight">
+      <h2 className="text-3xl md:text-4xl font-bold text-white max-w-lg leading-tight">
         Built for renting with confidence.
       </h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <p className="text-slate-400 max-w-lg mb-14 leading-relaxed">
+        Trust is at the heart of a better rental service
+      </p>
+      <div className="grid grid-cols-1 align-center mx-auto md:grid-cols-4 gap-8">
         {features.map((f) => (
           <div key={f.title}>
             <div className="w-14 h-14 rounded-full bg-rose-100 flex items-center justify-center mb-4">
-              <f.icon size={22} className="text-rose-500" />
+              <f.icon size={24} className="text-rose-500" />
             </div>
             <h3 className="text-white font-semibold mb-1">{f.title}</h3>
             <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
