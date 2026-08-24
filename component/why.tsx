@@ -4,13 +4,13 @@ export default function Why() {
   const reasons = [
     {
       number: "01",
-      icon: <DollarSign className=" w-5 h-5 text-slate-700" />,
+      icon: <DollarSign className=" w-5 h-5 text-black" />,
       title: "Expensive",
       description: "Buying something you only need occasionally can be unnecessarily expensive."
     },
     {
       number: "02", 
-      icon: <Box className=" w-5 h-5 text-slate-700" />,
+      icon: <Box className=" w-5 h-5 text-black" />,
       title: "Takes Space",
       description: "Items that aren't used regularly end up taking up valuable storage space."
     },
@@ -29,25 +29,23 @@ export default function Why() {
   ]
 
   return (
-    <section className="py-16 px-6 bg-white">
-      <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Why buy something
-        </h2>
-        <h2 className="text-2xl font-bold text-gray-900 mb-10">
-          you'll only use once?
-        </h2>
-        <p className="text-gray-500 mb-10">
-          Most of us have paid full price for things we barely touched again — because buying felt like the only option.
-        </p>
-
+    <section className="py-20 bg-[#FFFFF]">
+      <div className="max-w-6xl mx-auto px-[60px]">
+        <div className="max-w-[560px] mb-9">
+          <h2 className="max-w-[468px] text-5xl leading-[120%] tracking-[-0.02em] font-['Inter'] font-bold text-[#101216] ">
+            Why buy something you'll only use once?
+          </h2>
+          <p className="max-w-[560px]font-['Inter'] font-normal text-xl leading-[120%] text-[#525559]">
+            Most of us have paid full price for things we barely touched again — because buying felt like the only option.
+          </p>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {reasons.map((reason) => (
             <div key={reason.number} className="border border-gray-200 rounded-xl p-4">
-              <p className="text-orange-500 text-sm font-medium mb-2">{reason.number}</p>
-               <p className="mb-2">{reason.icon}</p>
-              <h3 className="font-semibold text-gray-900 mb-2">{reason.title}</h3>
-              <p className="text-gray-500 text-sm">{reason.description}</p>
+              <p className="text-black text-sm font-medium mb-2">{reason.number}</p>
+               <p className="mb-2 w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">{reason.icon}</p>
+              <h3 className="text-[#101216] font-['Inter'] font-bold leading-[120%] tracking-[0.02em] text-2xl mb-2">{reason.title}</h3>
+              <p className="text-black not-italic font-['Inter'] text-base font-normal leading-[140%]">{reason.description}</p>
             </div>
           ))}
         </div>
@@ -55,3 +53,7 @@ export default function Why() {
     </section>
   )
 }
+
+
+
+
