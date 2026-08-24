@@ -1,95 +1,104 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-// import { Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import { useState } from 'react';
+import SocialLinks from '../component/SocialLinks';
 
 export default function WaitlistFooter() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: wire up to your waitlist endpoint / email provider
-    console.log("Waitlist signup:", email);
-    setEmail("");
-  }
+    console.log('Waitlist signup:', email);
+    setEmail('');
+  };
 
   return (
-    <>
-      <section className="bg-gradient-to-r from-blue-600 to-orange-500 px-6 py-20 md:px-16 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-          Be first in line for Rendoz.
-        </h2>
-        <p className="text-white/90 max-w-lg mx-auto mb-8">
-          We&apos;re building a simpler way to access the things you need. Join the
-          waitlist and be among the first to know when Rendoz launches.
-        </p>
-        <form
-          onSubmit={handleSubmit}
-          className="max-w-md mx-auto flex rounded-full overflow-hidden bg-white p-1"
-        >
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            className="flex-1 px-4 py-2 text-slate-800 outline-none bg-transparent"
-          />
-          <button
-            type="submit"
-            className="bg-orange-600 hover:bg-orange-700 transition-colors text-white font-medium px-5 py-2 rounded-full whitespace-nowrap"
+    <footer className="w-full text-white font-sans">
+      {/* Upper Waitlist Call-to-Action Section */}
+      <section className="bg-gradient-to-r from-[#1B4BDB] via-[#6B32A3] to-[#E52E2E] px-6 py-20 text-center">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">
+            Be first in line for Rendoz.
+          </h2>
+          <p className="text-white/80 text-sm md:text-base max-w-xl mx-auto mb-8 leading-relaxed">
+            We&apos;re building a simpler way to access the things you need. Join the waitlist and be among the first to know when Rendoz launches.
+          </p>
+
+          {/* Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="max-w-md mx-auto flex items-center bg-white/20 backdrop-blur-md border border-white/30 rounded-full p-1.5 shadow-lg"
           >
-            Join the waitlist
-          </button>
-        </form>
-        <p className="text-white/70 text-xs mt-4">No spam. Just Rendoz updates.</p>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="flex-1 bg-transparent px-5 py-2.5 text-sm text-white placeholder-white/70 outline-none"
+            />
+            <button
+              type="submit"
+              className="bg-[#EA3829] hover:bg-[#d42d1f] transition-colors text-white font-semibold text-xs md:text-sm px-6 py-2.5 rounded-full whitespace-nowrap shadow-md"
+            >
+              Join the waitlist
+            </button>
+          </form>
+
+          <p className="text-white/60 text-xs mt-4">
+            No spam. Just Rendoz updates.
+          </p>
+        </div>
       </section>
 
-      <footer className="bg-[#0b1533] px-6 py-16 md:px-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 max-w-5xl">
-          <div className="col-span-2 md:col-span-1">
-            <h3 className="text-orange-500 font-bold text-lg mb-3">Rendoz</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Empowering Nigeria&apos;s sharing economy through trust, safety, and
-              premium service.
+      {/* Lower Navigation Footer Section */}
+      <section className="bg-[#0A1128] px-6 py-16 md:px-16 border-t border-white/10">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-10">
+          {/* Brand Info */}
+          <div className="max-w-xs">
+            <h3 className="text-red-500 font-bold text-xl mb-3">Rendoz</h3>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Empowering Nigeria&apos;s sharing economy through trust, safety, and premium service.
             </p>
-            {/* <div className="flex gap-4 mt-5 text-slate-400">
-              <a href="#" aria-label="Facebook"><Facebook size={16} /></a>
-              <a href="#" aria-label="Instagram"><Instagram size={16} /></a>
-              <a href="#" aria-label="Twitter"><Twitter size={16} /></a>
-              <a href="#" aria-label="LinkedIn"><Linkedin size={16} /></a>
-            </div> */}
           </div>
-          <div>
-            <h4 className="text-white font-semibold mb-3 text-sm">Marketplace</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-white">Luxury Cars</a></li>
-              <li><a href="#" className="hover:text-white">Cinema Gear</a></li>
-              <li><a href="#" className="hover:text-white">Creative Spaces</a></li>
-              <li><a href="#" className="hover:text-white">Insurance</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-semibold mb-3 text-sm">Trust</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-white">Security</a></li>
-              <li><a href="#" className="hover:text-white">Payments</a></li>
-              <li><a href="#" className="hover:text-white">Verified Hosts</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-semibold mb-3 text-sm">Company</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-white">About Us</a></li>
-              <li><a href="#" className="hover:text-white">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-white">Help Center</a></li>
-            </ul>
+
+          {/* Nav Links & Socials */}
+          <div className="flex flex-wrap md:flex-nowrap gap-12 md:gap-20">
+            {/* How It Works */}
+            <div>
+              <h4 className="font-semibold text-sm mb-4 text-white">How It Works</h4>
+              <ul className="space-y-2.5 text-xs text-slate-400">
+                <li><a href="#" className="hover:text-white transition-colors">For Renters</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">For Owners</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h4 className="font-semibold text-sm mb-4 text-white">Company</h4>
+              <ul className="space-y-2.5 text-xs text-slate-400">
+                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+              </ul>
+            </div>
+
+            {/* Social Icons */}
+            <div>
+              <SocialLinks />
+            </div>
           </div>
         </div>
-        <p className="text-slate-500 text-xs mt-12 text-center">
-          © {new Date().getFullYear()} Rendoz Marketplace. All rights reserved.
-        </p>
-      </footer>
-    </>
+
+        {/* Copyright */}
+        <div className="max-w-6xl mx-auto pt-12 mt-12 border-t border-slate-800 text-center">
+          <p className="text-slate-500 text-xs">
+            © {new Date().getFullYear()} Rendoz Marketplace. All rights reserved.
+          </p>
+        </div>
+      </section>
+    </footer>
   );
 }

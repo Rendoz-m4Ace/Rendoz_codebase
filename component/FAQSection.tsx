@@ -7,52 +7,80 @@ const faqs = [
   {
     question: "What is Rendoz?",
     answer:
-      "Rendoz is a marketplace that lets you rent everyday and premium items from verified owners near you.",
+      "Rendoz is a peer-to-peer and business asset rental marketplace that makes it easier to discover, compare, book, and rent items for a specific period. It also allows individuals and businesses to list assets they own and earn income when those assets are rented. Own it? Rent it out. Need it? Rent it.",
   },
   {
     question: "What can I rent on Rendoz?",
-    answer:
-      "Everything from luxury cars and cinema gear to creative spaces, with more categories added over time.",
+    answer: "Rendoz is designed to support multiple asset categories, including:",
+    list: [
+      "Fashion & Accessories",
+      "Electronics & Technology",
+      "Photography & Videography",
+      "Events & Entertainment",
+      "Tools & Equipment",
+      "Vehicles",
+      "Home & Living",
+      "Education"
+    ]
   },
+
   {
     question: "Who can list an asset?",
-    answer: "Any verified individual or business owner can list an asset for rent.",
+    answer: "Owners can provide information about their assets, upload photos, set rental prices, specify availability, and manage their listings.",
   },
   {
     question: "Can businesses list multiple assets?",
-    answer: "Yes, verified business accounts can list and manage multiple assets.",
+    answer: "Yes. Rendoz is designed to support businesses with multiple rental assets. Businesses should be able to manage multiple listings from one account. Business owners may also provide additional information such as their business name, description, and registration information where required.",
   },
   {
-    question: "How will owners be verified?",
+    question: "How will owners be verified??",
+    answer: "Trust is a key part of Rendoz. Users can have verification statuses such as Unverified, Verification Pending, Verified, or Rejected. Possible verification requirements include phone verification, email verification, and NIN verification. For certain assets, Rendoz may also require additional information such as proof of ownership, serial numbers, detailed photos, or other documentation. The exact verification process will comply with applicable Nigerian privacy and data-protection requirements.",
+  },
+  {
+    question: "How does payment work?",
     answer: "Owners go through an identity and ownership verification process before listing.",
   },
   {
     question: "How does payment work?",
-    answer: "Payments are processed securely through Rendoz at the time of booking.",
+    answer: "Rendoz is designed to facilitate rental transactions within the platform.Rental fee + applicable Rendoz fee + security deposit + delivery fee, where applicable.The recommended payment flow is: Renter pays → Rendoz receives payment → Booking is confirmed → Rental occurs → Return is confirmed → Applicable owner payout is released.This structure allows Rendoz to manage payments, deposits, refunds, commissions, and disputes.",
   },
   {
     question: "Is a security deposit required?",
-    answer: "Some listings require a refundable security deposit, shown before checkout.",
+    answer: "A security deposit may be required, depending on the asset and the owner's rental terms. For example, an owner may require a security deposit in addition to the rental fee. If the asset is returned normally, the deposit is released or refunded according to Rendoz's terms. If damage occurs, the owner may initiate a damage claim.",
   },
   {
     question: "How long can I rent an asset?",
-    answer: "Rental periods are set by the owner and can range from hours to weeks.",
+    answer: "Rental periods can vary depending on the asset and the owner's pricing model. The platform is not restricted to daily rentals because different asset categories have different rental needs. Rendoz is designed to support:",
+    list: [
+      "Hourly rentals",
+      "Daily rentals",
+      "Weekly rentals",
+      "Custom rental periods"
+    ],
   },
   {
     question: "Will Rendoz be available in Lagos?",
-    answer: "Lagos is part of our initial launch markets.",
+    answer: "Yes. Lagos, Nigeria is Rendoz's initial market. The long-term vision is to build a scalable marketplace that can support multiple asset categories and expand beyond the initial market.",
   },
   {
     question: "When is Rendoz launching?",
-    answer: "We're finalizing launch details — join the waitlist to be notified first.",
+    answer: "Rendoz is currently being developed toward its MVP, with the goal of enabling a complete rental transaction from listing and discovery through booking, payment, handover, return, and review. Join the waitlist to stay informed about the launch."
   },
   {
     question: "How can I become an early user?",
-    answer: "Join the waitlist above to get early access before public launch.",
+    answer: "Join the Rendoz waitlist to express your interest in using the platform when it launches. Whether you want to rent something you need or earn from assets you already own, you can join the waitlist and be part of the early Rendoz community. Own it? Rent it out. Need it? Rent it..",
   },
 ];
 
-function FAQRow({ question, answer }: { question: string; answer: string }) {
+function FAQRow({ 
+  question, 
+  answer, 
+  list 
+}: { 
+  question: string; 
+  answer: string; 
+  list?: string[]; 
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -72,8 +100,21 @@ function FAQRow({ question, answer }: { question: string; answer: string }) {
           }`}
         />
       </button>
+
       {open && (
-        <p className="text-slate-500 text-sm leading-relaxed pb-5 pr-8">{answer}</p>
+        <div className="pb-5 pr-8 space-y-3">
+          <p className="text-slate-500 text-sm leading-relaxed">
+            {answer}
+          </p>
+
+          {list && list.length > 0 && (
+            <ul className="list-disc list-inside text-slate-500 text-sm space-y-1">
+              {list.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   );
@@ -90,7 +131,12 @@ export default function FAQSection() {
       </h2>
       <div className="max-w-2xl border-t border-slate-200">
         {faqs.map((f) => (
-          <FAQRow key={f.question} question={f.question} answer={f.answer} />
+          <FAQRow
+            key={f.question}
+            question={f.question}
+            answer={f.answer}
+            list={f.list}
+          />
         ))}
       </div>
     </section>
