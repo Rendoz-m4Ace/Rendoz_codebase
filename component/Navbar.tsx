@@ -1,17 +1,23 @@
+import Image from "next/image";
 export default function Navbar() {
   return (
-    <nav className="flex h-12 items-center justify-between border-b border-white/30 bg-[#dfe3f3] px-6">
-      <div className="font-bold text-sm text-slate-800">
-        R<span className="text-orange-500">endoz</span>
+    <nav className="flex font-['Inter'] h-12 items-center justify-between border-b border-white/30 bg-[#D9E0EB] px-6">
+      
+      <div className="">
+        <Image src="/images/logo.png" alt="RendOz logo" width={120} height={32} />
       </div>
-      <ul className="hidden items-center gap-5 text-[9px] text-slate-800 md:flex">
+      <ul className="font-normal text-base leading-[140%] hidden items-center gap-10  text-black md:flex">
         <li>About</li>
         <li>For Renters &amp; Owners</li>
         <li>How it works</li>
         <li>FAQ</li>
       </ul>
-      <button className="rounded-full bg-orange-500 px-4 py-1.5 text-[10px] font-semibold text-white">
+      <button className="rounded-full w-123px h-22px bg-orange-500 px-4 py-1.5 text-base leading-[140%] font-semibold font-normal text-white">
         Join the waitlist
       </button>
     </nav>
   )}
+
+ 
+
+
