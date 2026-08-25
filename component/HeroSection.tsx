@@ -2,6 +2,7 @@ import Image from "next/image";
 import Why from "./why";
 import What from "./what";
 import { Camera, Bike, Zap, Laptop } from "lucide-react";
+import WaitlistForm from "./WaitlistForm";
 
 
 export default function HeroSection() {
@@ -28,19 +29,8 @@ export default function HeroSection() {
             <p className="mt-5 text-base leading-[140%] font-semibold uppercase text-[#FE6E04]">
               Get Early Access
             </p>
-            <form className="mt-1 Font-Semibold text-base leading-[140%] flex max-w-[270px] flex-col text-[#5255559] gap-2 sm:flex-row">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-[9px] focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-              <button
-                type="submit"
-                className="rounded-full bg-[#FE6E04] px-4 py-1.5 font-semibold text-base leading-[140%] text-white transition hover:bg-orange-600"
-              >
-                Join the waitlist
-              </button>
-            </form>
+
+            <WaitlistForm variant="hero" />
 
             <p className="mt-2 text-base font-normal leading-[140%] text-[#696D73]">
               Built for owners and renters
