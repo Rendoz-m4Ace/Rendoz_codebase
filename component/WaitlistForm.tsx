@@ -54,30 +54,30 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
     );
   }
 
-  if (variant === 'hero') {
-    return (
-      <form onSubmit={handleSubmit} className="mt-1 flex max-w-[270px] flex-col gap-2 sm:flex-row">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-[9px] focus:outline-none focus:ring-2 focus:ring-orange-400"
-          required
-        />
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="rounded-full bg-orange-500 px-4 py-1.5 text-[9px] font-medium text-white transition hover:bg-orange-600 disabled:opacity-50"
-        >
-          {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
-        </button>
-        {message && status === 'error' && (
-          <p className="text-[9px] text-red-500 mt-1">{message}</p>
-        )}
-      </form>
-    );
-  }
+  // if (variant === 'hero') {
+  //   return (
+  //     <form onSubmit={handleSubmit} className="mt-1 flex max-w-[270px] flex-col gap-2 sm:flex-row">
+  //       <input
+  //         type="email"
+  //         value={email}
+  //         onChange={(e) => setEmail(e.target.value)}
+  //         placeholder="Enter your email"
+  //         className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-[9px] focus:outline-none focus:ring-2 focus:ring-orange-400"
+  //         required
+  //       />
+  //       <button
+  //         type="submit"
+  //         disabled={status === 'loading'}
+  //         className="rounded-full bg-orange-500 px-4 py-1.5 text-[9px] font-medium text-white transition hover:bg-orange-600 disabled:opacity-50"
+  //       >
+  //         {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
+  //       </button>
+  //       {message && status === 'error' && (
+  //         <p className="text-[9px] text-red-500 mt-1">{message}</p>
+  //       )}
+  //     </form>
+  //   );
+  // }
 
   if (variant === 'footer') {
     return (
