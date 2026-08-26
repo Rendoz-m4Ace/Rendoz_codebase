@@ -2,6 +2,7 @@ import Image from "next/image";
 // import Why from "./why";
 // import What from "./what";
 import { Camera, Bike, Zap, Laptop } from "lucide-react";
+import WaitlistForm from "./WaitlistForm";
 
 
 
@@ -47,6 +48,8 @@ export default function HeroSection() {
                 Join the waitlist
               </button>
             </div>
+
+            <WaitlistForm variant="hero" />
 
             <p className="mt-2 text-xs text-[#696D73]">
               Built for owners and renters
