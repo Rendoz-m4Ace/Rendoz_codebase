@@ -36,10 +36,10 @@ const faqs = [
     question: "How will owners be verified??",
     answer: "Trust is a key part of Rendoz. Users can have verification statuses such as Unverified, Verification Pending, Verified, or Rejected. Possible verification requirements include phone verification, email verification, and NIN verification. For certain assets, Rendoz may also require additional information such as proof of ownership, serial numbers, detailed photos, or other documentation. The exact verification process will comply with applicable Nigerian privacy and data-protection requirements.",
   },
-  {
-    question: "How does payment work?",
-    answer: "Owners go through an identity and ownership verification process before listing.",
-  },
+  // {
+  //   question: "How does payment work?",
+  //   answer: "Owners go through an identity and ownership verification process before listing.",
+  // },
   {
     question: "How does payment work?",
     answer: "Rendoz is designed to facilitate rental transactions within the platform.Rental fee + applicable Rendoz fee + security deposit + delivery fee, where applicable.The recommended payment flow is: Renter pays → Rendoz receives payment → Booking is confirmed → Rental occurs → Return is confirmed → Applicable owner payout is released.This structure allows Rendoz to manage payments, deposits, refunds, commissions, and disputes.",
