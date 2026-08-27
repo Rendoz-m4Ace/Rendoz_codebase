@@ -1,44 +1,13 @@
-import bcryptjs from 'bcryptjs';
+import { Redis } from '@upstash/redis';
 import crypto from 'crypto';
-import { getDb } from './db';
 
-const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-interface AdminUser {
-  id: number;
-  username: string;
-  password_hash: string;
-  created_at: string;
-}
-
-interface Session {
-  id: string;
-  admin_id: number;
-  expires_at: string;
-  created_at: string;
-}
-
-export function initializeAdmin(): void {
-  const db = getDb();
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminPassword) {
-    console.error('ADMIN_PASSWORD environment variable is not set');
-    return;
-  }
-
-  const existingAdmin = db.prepare('SELECT id FROM admin_users WHERE username = ?').get('admin') as AdminUser | undefined;
-
-  if (!existingAdmin) {
-    const passwordHash = bcryptjs.hashSync(adminPassword, 10);
-    db.prepare('INSERT INTO admin_users (username, password_hash) VALUES (?, ?)').run('admin', passwordHash);
-    console.log('Admin user created successfully');
-  } else {
-    const passwordHash = bcryptjs.hashSync(adminPassword, 10);
-    db.prepare('UPDATE admin_users SET password_hash = ? WHERE username = ?').run(passwordHash, 'admin');
-    console.log('Admin password updated');
-  }
-}
+const SESSION_KEY = 'rendoz:sessions';
+const SESSION_DURATION_SECONDS = 24 * 60 * 60;
 
 export function validateAdminPassword(password: string): boolean {
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -46,23 +15,20 @@ export function validateAdminPassword(password: string): boolean {
   return password === adminPassword;
 }
 
-export function createSession(): string {
-  const db = getDb();
+export async function createSession(): Promise<string> {
   const sessionId = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
 
-  db.prepare('INSERT INTO admin_sessions (id, expires_at) VALUES (?, ?)').run(sessionId, expiresAt);
+  await redis.hset(SESSION_KEY, { [sessionId]: Date.now().toString() });
+  await redis.expire(SESSION_KEY, SESSION_DURATION_SECONDS);
 
   return sessionId;
 }
 
-export function validateSession(sessionId: string): boolean {
-  const db = getDb();
-  const session = db.prepare('SELECT * FROM admin_sessions WHERE id = ? AND expires_at > ?').get(sessionId, new Date().toISOString()) as Session | undefined;
-  return !!session;
+export async function validateSession(sessionId: string): Promise<boolean> {
+  const exists = await redis.hget<string>(SESSION_KEY, sessionId);
+  return !!exists;
 }
 
-export function deleteSession(sessionId: string): void {
-  const db = getDb();
-  db.prepare('DELETE FROM admin_sessions WHERE id = ?').run(sessionId);
+export async function deleteSession(sessionId: string): Promise<void> {
+  await redis.hdel(SESSION_KEY, sessionId);
 }

@@ -1,67 +1,13 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { Redis } from '@upstash/redis';
 
-const DB_PATH = path.join(process.cwd(), 'rendoz.db');
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-let db: Database.Database | null = null;
-
-export function getDb(): Database.Database {
-  if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
-    initializeDatabase();
-  }
-  return db;
-}
-
-function initializeDatabase() {
-  const database = db!;
-
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS waitlist (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT NOT NULL UNIQUE,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      ip_address TEXT,
-      source TEXT DEFAULT 'website'
-    )
-  `);
-
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS admin_users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS admin_sessions (
-      id TEXT PRIMARY KEY,
-      admin_id INTEGER DEFAULT 1,
-      expires_at DATETIME NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS rate_limit (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      ip_address TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  database.exec(`
-    CREATE INDEX IF NOT EXISTS idx_waitlist_email ON waitlist(email)
-  `);
-
-  database.exec(`
-    CREATE INDEX IF NOT EXISTS idx_rate_limit_ip ON rate_limit(ip_address, created_at)
-  `);
-}
+const WAITLIST_KEY = 'rendoz:waitlist';
+const WAITLIST_INDEX_KEY = 'rendoz:waitlist:index';
+const RATE_LIMIT_KEY = 'rendoz:ratelimit';
 
 export interface WaitlistEntry {
   id: number;
@@ -71,61 +17,79 @@ export interface WaitlistEntry {
   source: string;
 }
 
-export function addEmail(email: string, ipAddress?: string, source: string = 'website'): { success: boolean; message: string } {
-  const database = getDb();
+export async function addEmail(email: string, ipAddress?: string, source: string = 'website'): Promise<{ success: boolean; message: string }> {
   const normalizedEmail = email.toLowerCase().trim();
 
-  const existing = database.prepare('SELECT id FROM waitlist WHERE email = ?').get(normalizedEmail) as { id: number } | undefined;
-  if (existing) {
+  const exists = await redis.sismember(WAITLIST_INDEX_KEY, normalizedEmail);
+  if (exists) {
     return { success: false, message: 'This email is already on the waitlist.' };
   }
 
   try {
-    database.prepare('INSERT INTO waitlist (email, ip_address, source) VALUES (?, ?, ?)').run(normalizedEmail, ipAddress || null, source);
+    const id = await redis.incr('rendoz:waitlist:counter');
+
+    const entry: WaitlistEntry = {
+      id,
+      email: normalizedEmail,
+      created_at: new Date().toISOString(),
+      ip_address: ipAddress || null,
+      source,
+    };
+
+    await redis.hset(WAITLIST_KEY, { [normalizedEmail]: JSON.stringify(entry) });
+    await redis.sadd(WAITLIST_INDEX_KEY, normalizedEmail);
+
     return { success: true, message: "You've been added to the waitlist!" };
   } catch (error) {
+    console.error('Failed to add email:', error);
     return { success: false, message: 'Failed to add email. Please try again.' };
   }
 }
 
-export function getEmail(email: string): WaitlistEntry | undefined {
-  const database = getDb();
-  return database.prepare('SELECT * FROM waitlist WHERE email = ?').get(email.toLowerCase().trim()) as WaitlistEntry | undefined;
+export async function getEmail(email: string): Promise<WaitlistEntry | undefined> {
+  const normalizedEmail = email.toLowerCase().trim();
+  const data = await redis.hget<string>(WAITLIST_KEY, normalizedEmail);
+  if (!data) return undefined;
+  return typeof data === 'string' ? JSON.parse(data) : data as unknown as WaitlistEntry;
 }
 
-export function getAllEmails(): WaitlistEntry[] {
-  const database = getDb();
-  return database.prepare('SELECT * FROM waitlist ORDER BY created_at DESC').all() as WaitlistEntry[];
+export async function getAllEmails(): Promise<WaitlistEntry[]> {
+  const emails = await redis.smembers(WAITLIST_INDEX_KEY);
+  const entries: WaitlistEntry[] = [];
+
+  for (const email of emails) {
+    const data = await redis.hget<string>(WAITLIST_KEY, email);
+    if (data) {
+      entries.push(typeof data === 'string' ? JSON.parse(data) : data as unknown as WaitlistEntry);
+    }
+  }
+
+  entries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  return entries;
 }
 
-export function getEmailCount(): number {
-  const database = getDb();
-  const result = database.prepare('SELECT COUNT(*) as count FROM waitlist').get() as { count: number };
-  return result.count;
+export async function getEmailCount(): Promise<number> {
+  return await redis.scard(WAITLIST_INDEX_KEY);
 }
 
-export function deleteEmail(email: string): boolean {
-  const database = getDb();
-  const result = database.prepare('DELETE FROM waitlist WHERE email = ?').run(email.toLowerCase().trim());
-  return result.changes > 0;
+export async function deleteEmail(email: string): Promise<boolean> {
+  const normalizedEmail = email.toLowerCase().trim();
+  const removed = await redis.srem(WAITLIST_INDEX_KEY, normalizedEmail);
+  await redis.hdel(WAITLIST_KEY, normalizedEmail);
+  return removed > 0;
 }
 
-export function checkRateLimit(ipAddress: string, maxAttempts: number = 5, windowMinutes: number = 60): boolean {
-  const database = getDb();
-  const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();
+export async function checkRateLimit(ipAddress: string, maxAttempts: number = 5, windowMinutes: number = 60): Promise<boolean> {
+  const key = `${RATE_LIMIT_KEY}:${ipAddress}`;
+  const count = await redis.incr(key);
 
-  const result = database.prepare('SELECT COUNT(*) as count FROM rate_limit WHERE ip_address = ? AND created_at > ?').get(ipAddress, windowStart) as { count: number };
+  if (count === 1) {
+    await redis.expire(key, windowMinutes * 60);
+  }
 
-  if (result.count >= maxAttempts) {
+  if (count > maxAttempts) {
     return false;
   }
 
-  database.prepare('INSERT INTO rate_limit (ip_address) VALUES (?)').run(ipAddress);
   return true;
-}
-
-export function cleanupRateLimit(): void {
-  const database = getDb();
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  database.prepare('DELETE FROM rate_limit WHERE created_at < ?').run(thirtyDaysAgo);
 }

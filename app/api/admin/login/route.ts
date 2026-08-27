@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { validateAdminPassword, createSession, initializeAdmin } from '@/lib/auth';
+import { validateAdminPassword, createSession } from '@/lib/auth';
 
 const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
@@ -8,8 +8,6 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    initializeAdmin();
-
     const body = await request.json();
     const result = loginSchema.safeParse(body);
 
@@ -29,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const sessionId = createSession();
+    const sessionId = await createSession();
 
     const response = NextResponse.json({
       success: true,
@@ -46,6 +44,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
+    console.error('Admin login error:', error);
     return NextResponse.json(
       { success: false, message: 'An error occurred' },
       { status: 500 }

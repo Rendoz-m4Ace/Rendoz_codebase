@@ -33,14 +33,15 @@ export async function POST(request: NextRequest) {
     const { email } = result.data;
     const ipAddress = getClientIP(request);
 
-    if (!checkRateLimit(ipAddress)) {
+    const rateLimitOk = await checkRateLimit(ipAddress);
+    if (!rateLimitOk) {
       return NextResponse.json(
         { success: false, message: 'Too many attempts. Please try again later.' },
         { status: 429 }
       );
     }
 
-    const dbResult = addEmail(email, ipAddress);
+    const dbResult = await addEmail(email, ipAddress);
 
     if (dbResult.success) {
       return NextResponse.json({ success: true, message: dbResult.message });
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
+    console.error('Waitlist POST error:', error);
     return NextResponse.json(
       { success: false, message: 'An error occurred. Please try again.' },
       { status: 500 }
@@ -60,7 +62,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
     const sessionId = request.cookies.get('admin_session')?.value;
 
     if (!sessionId) {
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { validateSession } = await import('@/lib/auth');
-    const isValid = validateSession(sessionId);
+    const isValid = await validateSession(sessionId);
 
     if (!isValid) {
       return NextResponse.json(
@@ -80,8 +81,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const emails = getAllEmails();
-    const count = getEmailCount();
+    const emails = await getAllEmails();
+    const count = await getEmailCount();
 
     return NextResponse.json({
       success: true,
@@ -91,6 +92,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    console.error('Waitlist GET error:', error);
     return NextResponse.json(
       { success: false, message: 'An error occurred' },
       { status: 500 }
