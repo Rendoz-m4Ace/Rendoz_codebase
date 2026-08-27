@@ -12,10 +12,10 @@ export default function Home() {
   return (
     <main>
       <HeroSection />
-      <RentCategory />
-      <MarketPlace />
       <Why />
       <What />
+      <RentCategory />
+      <MarketPlace />
       <TrustFeatures />
       <HowItWorks />
       <FAQSection />

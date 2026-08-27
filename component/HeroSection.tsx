@@ -34,21 +34,6 @@ export default function HeroSection() {
             <p className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-2">
               Get Early Access
             </p>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0 bg-white sm:bg-white/80 rounded-2xl sm:rounded-full p-1.5 border border-slate-200 shadow-sm">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full sm:flex-1 min-w-0 bg-transparent px-4 py-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none"
-              />
-              <button
-                type="button"
-                className="w-full sm:w-auto whitespace-nowrap rounded-xl sm:rounded-full bg-[#FE6E04] hover:bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors"
-              >
-                Join the waitlist
-              </button>
-            </div>
-
             <WaitlistForm variant="hero" />
 
             <p className="mt-2 text-xs text-[#696D73]">
