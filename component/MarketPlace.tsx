@@ -8,7 +8,7 @@ export default function MarketPlace() {
 
   return (
     <>
-      <div className="bg-orange-50 py-16 mt-8">
+      <div className="bg-orange-50 py-16 mt-8" id='renters-owners'>
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 

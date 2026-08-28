@@ -3,12 +3,22 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { X } from 'lucide-react';
-
 import WaitlistForm from './WaitlistForm';
+import Link from 'next/link';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  // Smooth scroller
+  const scrollToSection = (e:React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element =document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      window.history.pushState(null, '', `#${id}`);
+    }
+  }
 
   const openWaitlist = () => {
     setIsOpen(false);
@@ -38,33 +48,35 @@ export default function Navbar() {
           {/* Desktop Links */}
           <ul className="hidden items-center gap-8 text-base font-normal text-gray-700 md:flex">
             <li>
-              <a href="#about" className="transition-colors hover:text-black">
+              <Link href="#about" onClick={(e) => scrollToSection(e, 'about')}
+               className="transition-colors hover:text-black">
                 About
-              </a>
+              </Link>
             </li>
 
             <li>
-              <a
-                href="#renters-owners"
+              <Link
+                href="#renters-owners" onClick={(e) => scrollToSection(e, 'renters-owners')}
                 className="transition-colors hover:text-black"
               >
                 For Renters &amp; Owners
-              </a>
+              </Link>
             </li>
 
             <li>
-              <a
-                href="#how-it-works"
+              <Link
+                href="#how-it-works" onClick={(e) => scrollToSection(e, 'how-it-works')}
                 className="transition-colors hover:text-black"
               >
                 How it works
-              </a>
+              </Link>
             </li>
 
             <li>
-              <a href="#faq" className="transition-colors hover:text-black">
+              <Link href="#faq" onClick={(e) => scrollToSection(e, 'faq')}
+              className="transition-colors hover:text-black">
                 FAQ
-              </a>
+              </Link>
             </li>
           </ul>
 

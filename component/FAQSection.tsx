@@ -122,7 +122,7 @@ function FAQRow({
 
 export default function FAQSection() {
   return (
-    <section className="bg-white px-6 py-20 md:px-16">
+    <section className="bg-white px-6 py-20 md:px-16" id="faq">
       <p className="text-xs font-semibold tracking-widest text-orange-600 uppercase mb-3">
         FAQ
       </p>
