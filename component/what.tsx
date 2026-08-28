@@ -1,6 +1,6 @@
 export default function What() {
   return (
-    <section className="bg-[#D9E0EB] py-12 md:py-20">
+    <section className="bg-[#D9E0EB] py-12 md:py-20" id="about">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-[60px] grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
 
         {/* LEFT SIDE - Text */}

@@ -37,7 +37,7 @@ export default function HowItWorks() {
   const current = contentData[activeRole];
 
   return (
-    <section className="bg-[#F5F7FA] px-6 py-20 md:px-16 overflow-hidden">
+    <section className="bg-[#F5F7FA] px-6 py-20 md:px-16 overflow-hidden" id='how-it-works'>
       <div className="max-w-6xl mx-auto">
         {/* Header & Switcher */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-6">
