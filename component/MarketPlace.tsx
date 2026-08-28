@@ -45,9 +45,9 @@ export default function MarketPlace() {
                   Discover useful items near you
                 </li>
               </ul>
-              <button
+              <button 
                 onClick={() => setShowModal(true)}
-                className="mt-6 w-full md:w-auto bg-orange-600 text-white font-heading font-semibold px-6 py-3 rounded-full hover:opacity-90 transition"
+                className="mt-6 w-full md:w-auto bg-orange-600 hover:bg-orange-800 text-white font-heading font-semibold px-6 py-3 rounded-full hover:opacity-90 transition"
               >
                 Join the waitlist
               </button>
@@ -90,7 +90,7 @@ export default function MarketPlace() {
               </ul>
               <button
                 onClick={() => setShowModal(true)}
-                className="mt-6 w-full md:w-auto bg-blue-900 text-white font-heading font-semibold px-6 py-3 rounded-full hover:opacity-90 transition"
+                className="mt-6 w-full md:w-auto bg-blue-900 hover:bg-blue-800 text-white font-heading font-semibold px-6 py-3 rounded-full hover:opacity-90 transition"
               >
                 Join the waitlist
               </button>
