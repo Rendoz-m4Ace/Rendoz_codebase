@@ -33,22 +33,39 @@ export async function POST(request: NextRequest) {
     const { email } = result.data;
     const ipAddress = getClientIP(request);
 
-    const rateLimitOk = await checkRateLimit(ipAddress);
-    if (!rateLimitOk) {
+    try {
+      const rateLimitOk = await checkRateLimit(ipAddress);
+      if (!rateLimitOk) {
+        return NextResponse.json(
+          { success: false, message: 'Too many attempts. Please try again later.' },
+          { status: 429 }
+        );
+      }
+    } catch (e) {
+      console.error('Rate limit Redis error:', e);
       return NextResponse.json(
-        { success: false, message: 'Too many attempts. Please try again later.' },
-        { status: 429 }
+        { success: false, message: 'Service temporarily unavailable. Please try again.' },
+        { status: 503 }
       );
     }
 
-    const dbResult = await addEmail(email, ipAddress);
+    try {
+      const dbResult = await addEmail(email, ipAddress);
 
-    if (dbResult.success) {
-      return NextResponse.json({ success: true, message: dbResult.message });
-    } else {
+      if (dbResult.success) {
+        return NextResponse.json({ success: true, message: dbResult.message });
+      } else {
+        return NextResponse.json(
+          { success: false, message: dbResult.message },
+          { status: 409 }
+        );
+      }
+    } catch (e) {
+      console.error('addEmail Redis error:', e);
+      const msg = e instanceof Error && e.message.includes('Missing Upstash') ? e.message : 'Failed to connect to database';
       return NextResponse.json(
-        { success: false, message: dbResult.message },
-        { status: 409 }
+        { success: false, message: msg },
+        { status: 503 }
       );
     }
   } catch (error) {
@@ -93,8 +110,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Waitlist GET error:', error);
+    const msg = error instanceof Error && error.message.includes('Missing Upstash') ? error.message : 'An error occurred';
     return NextResponse.json(
-      { success: false, message: 'An error occurred' },
+      { success: false, message: msg },
       { status: 500 }
     );
   }

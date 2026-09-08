@@ -1,9 +1,22 @@
 import { Redis } from '@upstash/redis';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+function sanitize(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return value.replace(/^["']|["']$/g, '').trim();
+}
+
+let redisInstance: Redis | null = null;
+
+function getRedis(): Redis {
+  if (redisInstance) return redisInstance;
+  const url = sanitize(process.env.UPSTASH_REDIS_REST_URL);
+  const token = sanitize(process.env.UPSTASH_REDIS_REST_TOKEN);
+  if (!url || !token) {
+    throw new Error('Missing Upstash Redis env: UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN');
+  }
+  redisInstance = new Redis({ url, token });
+  return redisInstance;
+}
 
 const WAITLIST_KEY = 'rendoz:waitlist';
 const WAITLIST_INDEX_KEY = 'rendoz:waitlist:index';
@@ -19,6 +32,7 @@ export interface WaitlistEntry {
 
 export async function addEmail(email: string, ipAddress?: string, source: string = 'website'): Promise<{ success: boolean; message: string }> {
   const normalizedEmail = email.toLowerCase().trim();
+  const redis = getRedis();
 
   const exists = await redis.sismember(WAITLIST_INDEX_KEY, normalizedEmail);
   if (exists) {
@@ -48,38 +62,38 @@ export async function addEmail(email: string, ipAddress?: string, source: string
 
 export async function getEmail(email: string): Promise<WaitlistEntry | undefined> {
   const normalizedEmail = email.toLowerCase().trim();
+  const redis = getRedis();
   const data = await redis.hget<string>(WAITLIST_KEY, normalizedEmail);
   if (!data) return undefined;
-  return typeof data === 'string' ? JSON.parse(data) : data as unknown as WaitlistEntry;
+  return typeof data === 'string' ? JSON.parse(data) : (data as unknown as WaitlistEntry);
 }
 
 export async function getAllEmails(): Promise<WaitlistEntry[]> {
-  const emails = await redis.smembers(WAITLIST_INDEX_KEY);
-  const entries: WaitlistEntry[] = [];
-
-  for (const email of emails) {
-    const data = await redis.hget<string>(WAITLIST_KEY, email);
-    if (data) {
-      entries.push(typeof data === 'string' ? JSON.parse(data) : data as unknown as WaitlistEntry);
-    }
-  }
-
+  const redis = getRedis();
+  const data = await redis.hgetall<Record<string, string>>(WAITLIST_KEY);
+  if (!data) return [];
+  const entries: WaitlistEntry[] = Object.values(data).map((v) =>
+    typeof v === 'string' ? JSON.parse(v) : (v as unknown as WaitlistEntry)
+  );
   entries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   return entries;
 }
 
 export async function getEmailCount(): Promise<number> {
+  const redis = getRedis();
   return await redis.scard(WAITLIST_INDEX_KEY);
 }
 
 export async function deleteEmail(email: string): Promise<boolean> {
   const normalizedEmail = email.toLowerCase().trim();
+  const redis = getRedis();
   const removed = await redis.srem(WAITLIST_INDEX_KEY, normalizedEmail);
   await redis.hdel(WAITLIST_KEY, normalizedEmail);
   return removed > 0;
 }
 
 export async function checkRateLimit(ipAddress: string, maxAttempts: number = 5, windowMinutes: number = 60): Promise<boolean> {
+  const redis = getRedis();
   const key = `${RATE_LIMIT_KEY}:${ipAddress}`;
   const count = await redis.incr(key);
 
