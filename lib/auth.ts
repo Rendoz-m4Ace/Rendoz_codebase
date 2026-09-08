@@ -1,68 +1,48 @@
-import bcryptjs from 'bcryptjs';
+import { Redis } from '@upstash/redis';
 import crypto from 'crypto';
-import { getDb } from './db';
 
-const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
-
-interface AdminUser {
-  id: number;
-  username: string;
-  password_hash: string;
-  created_at: string;
+function sanitize(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return value.replace(/^["']|["']$/g, '').trim();
 }
 
-interface Session {
-  id: string;
-  admin_id: number;
-  expires_at: string;
-  created_at: string;
-}
+let redisInstance: Redis | null = null;
 
-export function initializeAdmin(): void {
-  const db = getDb();
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminPassword) {
-    console.error('ADMIN_PASSWORD environment variable is not set');
-    return;
+function getRedis(): Redis {
+  if (redisInstance) return redisInstance;
+  const url = sanitize(process.env.UPSTASH_REDIS_REST_URL);
+  const token = sanitize(process.env.UPSTASH_REDIS_REST_TOKEN);
+  if (!url || !token) {
+    throw new Error('Missing Upstash Redis env: UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN');
   }
-
-  const existingAdmin = db.prepare('SELECT id FROM admin_users WHERE username = ?').get('admin') as AdminUser | undefined;
-
-  if (!existingAdmin) {
-    const passwordHash = bcryptjs.hashSync(adminPassword, 10);
-    db.prepare('INSERT INTO admin_users (username, password_hash) VALUES (?, ?)').run('admin', passwordHash);
-    console.log('Admin user created successfully');
-  } else {
-    const passwordHash = bcryptjs.hashSync(adminPassword, 10);
-    db.prepare('UPDATE admin_users SET password_hash = ? WHERE username = ?').run(passwordHash, 'admin');
-    console.log('Admin password updated');
-  }
+  redisInstance = new Redis({ url, token });
+  return redisInstance;
 }
+
+const SESSION_KEY = 'rendoz:sessions';
+const SESSION_DURATION_SECONDS = 24 * 60 * 60;
 
 export function validateAdminPassword(password: string): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminPassword = sanitize(process.env.ADMIN_PASSWORD);
   if (!adminPassword) return false;
   return password === adminPassword;
 }
 
-export function createSession(): string {
-  const db = getDb();
+export async function createSession(): Promise<string> {
   const sessionId = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
-
-  db.prepare('INSERT INTO admin_sessions (id, expires_at) VALUES (?, ?)').run(sessionId, expiresAt);
-
+  const redis = getRedis();
+  await redis.hset(SESSION_KEY, { [sessionId]: Date.now().toString() });
+  await redis.expire(SESSION_KEY, SESSION_DURATION_SECONDS);
   return sessionId;
 }
 
-export function validateSession(sessionId: string): boolean {
-  const db = getDb();
-  const session = db.prepare('SELECT * FROM admin_sessions WHERE id = ? AND expires_at > ?').get(sessionId, new Date().toISOString()) as Session | undefined;
-  return !!session;
+export async function validateSession(sessionId: string): Promise<boolean> {
+  const redis = getRedis();
+  const exists = await redis.hget<string>(SESSION_KEY, sessionId);
+  return !!exists;
 }
 
-export function deleteSession(sessionId: string): void {
-  const db = getDb();
-  db.prepare('DELETE FROM admin_sessions WHERE id = ?').run(sessionId);
+export async function deleteSession(sessionId: string): Promise<void> {
+  const redis = getRedis();
+  await redis.hdel(SESSION_KEY, sessionId);
 }
