@@ -54,30 +54,30 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
     );
   }
 
-  if (variant === 'hero') {
-    return (
-      <form onSubmit={handleSubmit} className="mt-1 flex max-w-[270px] flex-col gap-2 sm:flex-row">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-[9px] focus:outline-none focus:ring-2 focus:ring-orange-400"
-          required
-        />
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="rounded-full bg-orange-500 px-4 py-1.5 text-[9px] font-medium text-white transition hover:bg-orange-600 disabled:opacity-50"
-        >
-          {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
-        </button>
-        {message && status === 'error' && (
-          <p className="text-[9px] text-red-500 mt-1">{message}</p>
-        )}
-      </form>
-    );
-  }
+  // if (variant === 'hero') {
+  //   return (
+  //     <form onSubmit={handleSubmit} className="mt-1 flex max-w-[270px] flex-col gap-2 sm:flex-row">
+  //       <input
+  //         type="email"
+  //         value={email}
+  //         onChange={(e) => setEmail(e.target.value)}
+  //         placeholder="Enter your email"
+  //         className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-[9px] focus:outline-none focus:ring-2 focus:ring-orange-400"
+  //         required
+  //       />
+  //       <button
+  //         type="submit"
+  //         disabled={status === 'loading'}
+  //         className="rounded-full bg-orange-500 px-4 py-1.5 text-[9px] font-medium text-white transition hover:bg-orange-600 disabled:opacity-50"
+  //       >
+  //         {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
+  //       </button>
+  //       {message && status === 'error' && (
+  //         <p className="text-[9px] text-red-500 mt-1">{message}</p>
+  //       )}
+  //     </form>
+  //   );
+  // }
 
   if (variant === 'footer') {
     return (
@@ -133,27 +133,25 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Enter your email"
-        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-        required
-      />
-      <button
-        type="submit"
-        disabled={status === 'loading'}
-        className="w-full bg-orange-600 text-white font-heading font-semibold px-6 py-3 rounded-full hover:opacity-90 transition disabled:opacity-50"
-      >
-        {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
-      </button>
-      {message && (
-        <p className={`text-sm text-center ${status === 'error' ? 'text-red-500' : 'text-green-600'}`}>
-          {message}
-        </p>
-      )}
-    </form>
+    <div className='w-full'>
+    <form onSubmit={handleSubmit} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-0 rounded-2xl bg-transparent md:bg-white shadow-sm md:rounded-full">
+  <input
+    type="email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    placeholder="Enter your email"
+    className="w-full md:w-auto flex-1 rounded-xl md:rounded-full bg-[#F3F4F6] md:bg-transparent px-5 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+    required
+  />
+  <button
+    type="submit"
+    disabled={status === 'loading'}
+    className="w-full md:w-auto shrink-0 whitespace-nowrap rounded-xl md:rounded-full bg-orange-500 hover:bg-[#d42d1f] px-7 py-2.5 text-sm font-medium text-white transition-colors"
+  >
+    {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
+  </button>
+</form>
+    </div>
+    
   );
 }
