@@ -37,35 +37,37 @@ export default function HowItWorks() {
   const current = contentData[activeRole];
 
   return (
-    <section className="bg-[#F5F7FA] px-6 py-20 md:px-16 overflow-hidden" id='how-it-works'>
+    <section className="bg-[#F5F7FA] px-4 sm:px-6 py-14 sm:py-20 md:px-16 overflow-hidden" id="how-it-works">
       <div className="max-w-6xl mx-auto">
+
         {/* Header & Switcher */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-start md:items-center justify-between mb-10 sm:mb-16 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
+            className="max-w-lg"
           >
             <p className="text-xs font-semibold tracking-widest text-orange-600 uppercase mb-2">
               How It Works
             </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight">
               {current.heading}
             </h2>
           </motion.div>
 
-          {/* Segmented Toggle Control */}
+          {/* Segmented Toggle */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="bg-[#E2E7ED] p-1.5 rounded-2xl flex items-center w-fit m-auto shadow-inner relative"
+            className="bg-[#E2E7ED] p-1.5 rounded-2xl flex items-center w-fit shadow-inner relative shrink-0"
           >
             <button
               type="button"
               onClick={() => setActiveRole('renters')}
-              className={`relative z-10 px-6 py-2.5 text-xs font-bold rounded-xl transition-colors duration-200 ${
+              className={`relative z-10 px-5 sm:px-6 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-colors duration-200 ${
                 activeRole === 'renters' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -82,7 +84,7 @@ export default function HowItWorks() {
             <button
               type="button"
               onClick={() => setActiveRole('owners')}
-              className={`relative z-10 px-6 py-2.5 text-xs font-bold rounded-xl transition-colors duration-200 ${
+              className={`relative z-10 px-5 sm:px-6 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-colors duration-200 ${
                 activeRole === 'owners' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -106,7 +108,7 @@ export default function HowItWorks() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8"
           >
             {current.steps.map((s, index) => (
               <motion.div
@@ -115,21 +117,21 @@ export default function HowItWorks() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                className="group flex flex-col items-center text-center p-6 bg-white/60 hover:bg-white rounded-2xl border border-transparent hover:border-slate-200 hover:shadow-xl transition-all duration-300 "
+                className="group flex flex-col items-center text-center p-5 sm:p-6 bg-white/60 hover:bg-white rounded-2xl border border-transparent hover:border-slate-200 hover:shadow-xl transition-all duration-300"
               >
                 {/* Number Badge */}
                 <div
-                  className={`w-14 h-14 rounded-full border flex items-center justify-center mb-5 transition-all duration-300 ${current.badgeOuter}`}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border flex items-center justify-center mb-4 sm:mb-5 transition-all duration-300 ${current.badgeOuter}`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-extrabold text-sm transition-colors duration-300 ${current.badgeBorder}`}
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center font-extrabold text-sm transition-colors duration-300 ${current.badgeBorder}`}
                   >
                     {s.num}
                   </div>
                 </div>
 
                 <h3
-                  className={`text-slate-900 font-extrabold tracking-wider mb-2 text-sm uppercase transition-colors ${current.titleHover}`}
+                  className={`text-slate-900 font-extrabold tracking-wider mb-2 text-xs sm:text-sm uppercase transition-colors ${current.titleHover}`}
                 >
                   {s.title}
                 </h3>
@@ -140,6 +142,7 @@ export default function HowItWorks() {
             ))}
           </motion.div>
         </AnimatePresence>
+
       </div>
     </section>
   );

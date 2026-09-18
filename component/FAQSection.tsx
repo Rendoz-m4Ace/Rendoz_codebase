@@ -87,10 +87,10 @@ function FAQRow({
     <div className="border-b border-slate-200">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-5 text-left group"
+        className="w-full flex items-center justify-between py-4 sm:py-5 text-left group"
         aria-expanded={open}
       >
-        <span className="text-slate-900 font-medium group-hover:text-orange-600 transition-colors">
+        <span className="text-slate-900 text-sm sm:text-base font-medium group-hover:text-orange-600 transition-colors pr-4">
           {question}
         </span>
         <ChevronRight
@@ -102,7 +102,7 @@ function FAQRow({
       </button>
 
       {open && (
-        <div className="pb-5 pr-8 space-y-3">
+        <div className="pb-4 sm:pb-5 pr-4 sm:pr-8 space-y-3">
           <p className="text-slate-500 text-sm leading-relaxed">
             {answer}
           </p>
@@ -122,22 +122,24 @@ function FAQRow({
 
 export default function FAQSection() {
   return (
-    <section className="bg-white px-6 py-20 md:px-16" id="faq">
-      <p className="text-xs font-semibold tracking-widest text-orange-600 uppercase mb-3">
-        FAQ
-      </p>
-      <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-10">
-        Before you join.
-      </h2>
-      <div className="max-w-2xl border-t border-slate-200">
-        {faqs.map((f) => (
-          <FAQRow
-            key={f.question}
-            question={f.question}
-            answer={f.answer}
-            list={f.list}
-          />
-        ))}
+    <section className="bg-white px-4 sm:px-6 py-14 sm:py-20 md:px-16" id="faq">
+      <div className="max-w-6xl mx-auto">
+        <p className="text-xs font-semibold tracking-widest text-orange-600 uppercase mb-3">
+          FAQ
+        </p>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-8 sm:mb-10">
+          Before you join.
+        </h2>
+        <div className="max-w-2xl border-t border-slate-200">
+          {faqs.map((f) => (
+            <FAQRow
+              key={f.question}
+              question={f.question}
+              answer={f.answer}
+              list={f.list}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

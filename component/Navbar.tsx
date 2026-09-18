@@ -33,20 +33,21 @@ export default function Navbar() {
     <>
       {/* Navbar */}
       <nav className="relative z-40 border-b border-gray-200 bg-[#D9E0EB] font-['Inter']">
-        <div className="flex h-16 items-center justify-between px-4 md:px-8">
+        <div className="flex h-14 sm:h-16 items-center justify-between px-4 sm:px-6 md:px-8">
           {/* Logo */}
           <div className="flex items-center">
             <Image
               src="/images/logo.png"
               alt="RendOz logo"
-              width={120}
-              height={32}
+              width={100}
+              height={28}
+              className="w-24 sm:w-28 md:w-32 h-auto"
               priority
             />
           </div>
 
           {/* Desktop Links */}
-          <ul className="hidden items-center gap-8 text-base font-normal text-gray-700 md:flex">
+          <ul className="hidden items-center gap-5 lg:gap-8 text-sm lg:text-base font-normal text-gray-700 md:flex">
             <li>
               <Link href="#about" onClick={(e) => scrollToSection(e, 'about')}
                className="transition-colors hover:text-black">
@@ -84,7 +85,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={openWaitlist}
-            className="hidden rounded-full bg-orange-500 px-5 py-2 font-medium text-white transition-colors hover:bg-orange-600 md:block"
+            className="hidden rounded-full bg-orange-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-600 md:block whitespace-nowrap"
           >
             Join the waitlist
           </button>
@@ -117,7 +118,7 @@ export default function Navbar() {
 
         {/* Mobile Dropdown */}
         {isOpen && (
-          <div className="absolute left-0 top-16 z-50 flex w-full flex-col gap-4 border-b border-gray-200 bg-white px-6 py-5 text-center shadow-md md:hidden">
+          <div className="absolute left-0 top-14 sm:top-16 z-50 flex w-full flex-col gap-4 border-b border-gray-200 bg-white px-6 py-5 text-center shadow-md md:hidden">
             <a
               href="#about"
               onClick={() => setIsOpen(false)}

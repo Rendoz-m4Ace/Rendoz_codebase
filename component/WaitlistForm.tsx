@@ -35,7 +35,7 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
         setStatus('error');
         setMessage(data.message);
       }
-    } catch (err) {
+    } catch {
       setStatus('error');
       setMessage('An error occurred. Please try again.');
     }
@@ -54,6 +54,7 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
     );
   }
 
+  /* ── HERO ── */
   if (variant === 'hero') {
     return (
       <form onSubmit={handleSubmit} className="mt-1 w-full max-w-md">
@@ -69,9 +70,9 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="shrink-0 rounded-xl sm:rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:opacity-50"
+            className="shrink-0 rounded-xl sm:rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:opacity-50"
           >
-            {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
+            {status === 'loading' ? 'Joining…' : 'Join the waitlist'}
           </button>
         </div>
         {message && status === 'error' && (
@@ -81,52 +82,54 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
     );
   }
 
+  /* ── FOOTER ── */
   if (variant === 'footer') {
     return (
       <form
         onSubmit={handleSubmit}
-        className="relative max-w-md mx-auto flex items-center bg-white/20 backdrop-blur-md border border-white/30 rounded-full p-1.5 shadow-lg"
+        className="relative w-full max-w-md mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0 sm:bg-white/20 sm:backdrop-blur-md sm:border sm:border-white/30 sm:rounded-full sm:p-1.5 sm:shadow-lg"
       >
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
-          className="flex-1 bg-transparent px-5 py-2.5 text-sm text-white placeholder-white/70 outline-none"
+          className="flex-1 min-w-0 rounded-full bg-white/20 backdrop-blur-md border border-white/30 sm:bg-transparent sm:border-0 px-5 py-3 text-sm text-white placeholder-white/70 outline-none"
           required
         />
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="bg-[#EA3829] hover:bg-[#d42d1f] transition-colors text-white font-semibold text-xs md:text-sm px-6 py-2.5 rounded-full whitespace-nowrap shadow-md disabled:opacity-50"
+          className="shrink-0 bg-[#EA3829] hover:bg-[#d42d1f] transition-colors text-white font-semibold text-sm px-6 py-3 rounded-full whitespace-nowrap shadow-md disabled:opacity-50"
         >
-          {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
+          {status === 'loading' ? 'Joining…' : 'Join the waitlist'}
         </button>
         {message && status === 'error' && (
-          <p className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-full text-center text-xs text-red-200 bg-red-500/20 border border-red-300/30 rounded-lg px-3 py-1.5 backdrop-blur-sm">{message}</p>
+          <p className="absolute -bottom-9 left-0 right-0 text-center text-xs text-red-200 bg-red-500/20 border border-red-300/30 rounded-lg px-3 py-1.5 backdrop-blur-sm">{message}</p>
         )}
       </form>
     );
   }
 
+  /* ── NAVBAR ── */
   if (variant === 'navbar') {
     return (
-      <form onSubmit={handleSubmit} className="flex flex-col gap-1">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-1.5 w-full">
         <div className="flex items-center gap-2">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
-            className="px-3 py-1.5 text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="flex-1 min-w-0 px-3 py-1.5 text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400"
             required
           />
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="rounded-full bg-orange-500 px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-orange-600 transition"
+            className="shrink-0 rounded-full bg-orange-500 px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-orange-600 transition whitespace-nowrap"
           >
-            {status === 'loading' ? '...' : 'Join'}
+            {status === 'loading' ? '…' : 'Join'}
           </button>
         </div>
         {message && status === 'error' && (
@@ -136,24 +139,27 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
     );
   }
 
-  // marketplace + default
+  /* ── MARKETPLACE (default) ── */
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-0 rounded-2xl bg-transparent md:bg-white shadow-sm md:rounded-full md:p-1.5 md:border md:border-slate-200">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:bg-white sm:rounded-full sm:p-1.5 sm:border sm:border-slate-200 sm:shadow-sm"
+      >
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
-          className="w-full md:w-auto flex-1 rounded-xl md:rounded-full bg-[#F3F4F6] md:bg-transparent px-5 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+          className="flex-1 min-w-0 rounded-xl sm:rounded-full bg-[#F3F4F6] sm:bg-transparent border border-slate-200 sm:border-0 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 sm:focus:ring-0"
           required
         />
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="w-full md:w-auto shrink-0 whitespace-nowrap rounded-xl md:rounded-full bg-orange-500 hover:bg-orange-600 px-7 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50"
+          className="shrink-0 rounded-xl sm:rounded-full bg-orange-500 hover:bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition-colors disabled:opacity-50"
         >
-          {status === 'loading' ? 'Joining...' : 'Join the waitlist'}
+          {status === 'loading' ? 'Joining…' : 'Join the waitlist'}
         </button>
       </form>
       {message && status === 'error' && (
