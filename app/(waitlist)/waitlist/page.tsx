@@ -7,8 +7,8 @@ import FAQSection from "@/component/FAQSection";
 import WaitlistFooter from "@/component/WaitlistFooter";
 import RentCategory from "@/component/RentCategory";
 import MarketPlace from "@/component/MarketPlace";
- 
-export default function Home() {
+
+export default function WaitlistPage() {
   return (
     <main>
       <HeroSection />
