@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface WaitlistFormProps {
   variant?: 'hero' | 'footer' | 'navbar' | 'marketplace';
@@ -11,6 +12,7 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,15 +28,17 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
 
       const data = await response.json();
 
-      if (data.success) {
+      // Redirect to homepage on success (201/200) or duplicate email (409)
+      if (data.success || response.status === 409) {
         setStatus('success');
-        setMessage(data.message);
         setEmail('');
         onSuccess?.();
-      } else {
-        setStatus('error');
-        setMessage(data.message);
+        router.push('/');
+        return;
       }
+
+      setStatus('error');
+      setMessage(data.message);
     } catch (err) {
       setStatus('error');
       setMessage('An error occurred. Please try again.');
