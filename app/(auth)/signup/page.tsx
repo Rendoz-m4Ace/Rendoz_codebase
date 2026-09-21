@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, Phone, Mail, Lock, ShieldCheck, CreditCard, Clock } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Phone, Mail, Lock, ShieldCheck, Banknote, RefreshCcw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 // ---------------------------------------------------------------------------
@@ -59,8 +58,8 @@ function PasswordStrengthBar({ password }: { password: string }) {
 // ---------------------------------------------------------------------------
 const TRUST_FEATURES = [
   { icon: <ShieldCheck size={20} />, label: 'Verified owners & renters' },
-  { icon: <CreditCard size={20} />, label: 'Secure payments' },
-  { icon: <Clock size={20} />, label: 'Rent only for the time you need' },
+  { icon: <Banknote size={20} />, label: 'Secure payments' },
+  { icon: <RefreshCcw size={20} />, label: 'Rent only for the time you need' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -129,15 +128,9 @@ export default function SignUpPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <Link href="/">
-            <Image
-              src="/images/logo.png"
-              alt="Rendoz"
-              width={120}
-              height={32}
-              priority
-              className="brightness-0 invert"
-            />
+          <Link href="/" className="inline-flex items-center gap-0.5">
+            <span className="text-2xl font-extrabold text-white">R</span>
+            <span className="text-2xl font-extrabold text-white/90">endoz</span>
           </Link>
         </div>
 
@@ -156,7 +149,7 @@ export default function SignUpPage() {
         <ul className="relative z-10 flex flex-col gap-4">
           {TRUST_FEATURES.map((f) => (
             <li key={f.label} className="flex items-center gap-3 text-white text-sm font-medium">
-              <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <span className="w-10 h-10 rounded-xl border border-white/50 flex items-center justify-center shrink-0">
                 {f.icon}
               </span>
               {f.label}
