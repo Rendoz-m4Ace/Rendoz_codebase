@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface WaitlistFormProps {
@@ -13,6 +13,15 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const router = useRouter();
+
+  // Redirect to homepage 2.5s after a success state is set
+  useEffect(() => {
+    if (status !== 'success') return;
+    const timer = setTimeout(() => {
+      router.push('/');
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,12 +37,21 @@ export default function WaitlistForm({ variant = 'hero', onSuccess }: WaitlistFo
 
       const data = await response.json();
 
-      // Redirect to homepage on success (201/200) or duplicate email (409)
-      if (data.success || response.status === 409) {
-        setStatus('success');
+      if (response.status === 409) {
+        // Email already registered — show message then redirect via useEffect
         setEmail('');
+        setMessage('This email is already on the waitlist! Redirecting you...');
+        setStatus('success');
         onSuccess?.();
-        router.push('/');
+        return;
+      }
+
+      if (data.success) {
+        // New email registered — show success message then redirect via useEffect
+        setEmail('');
+        setMessage("You're on the waitlist! We'll be in touch soon. Redirecting you...");
+        setStatus('success');
+        onSuccess?.();
         return;
       }
 
