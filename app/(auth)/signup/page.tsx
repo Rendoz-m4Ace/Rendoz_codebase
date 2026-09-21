@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, Phone, Mail, Lock, ShieldCheck, Banknote, RefreshCcw } from 'lucide-react';
@@ -122,15 +123,22 @@ export default function SignUpPage() {
       {/* ── Left panel ──────────────────────────────────────────────────── */}
       <div className="relative bg-orange-500 md:w-[45%] flex flex-col justify-between px-10 py-10 overflow-hidden">
 
-        {/* Decorative circles */}
-        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 pointer-events-none" />
+        {/* Decorative circle — large, sits behind logo in top-left area */}
+        <div className="absolute -top-10 -left-10 w-80 h-80 rounded-full bg-white/20 pointer-events-none" />
+        {/* Decorative circle — bottom right */}
         <div className="absolute -bottom-20 -right-10 w-72 h-72 rounded-full bg-white/10 pointer-events-none" />
 
-        {/* Logo */}
+        {/* Logo — displayed on a white rounded pill so the navy "endoz"
+            text is readable against the orange panel, matching the template */}
         <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center gap-0.5">
-            <span className="text-2xl font-extrabold text-white">R</span>
-            <span className="text-2xl font-extrabold text-white/90">endoz</span>
+          <Link href="/" className="inline-flex items-center bg-white rounded-xl px-3 py-2 shadow-sm">
+            <Image
+              src="/images/logo.png"
+              alt="Rendoz"
+              width={110}
+              height={28}
+              priority
+            />
           </Link>
         </div>
 
