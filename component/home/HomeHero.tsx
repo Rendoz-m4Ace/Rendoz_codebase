@@ -28,7 +28,7 @@ export default function HomeHero() {
           List everything.
         </h1>
         <p className="mt-3 text-sm sm:text-base text-gray-500 max-w-xl mx-auto">
-          Find and rent the things you need without buying them. List what you own and earn extra income.
+          Nigeria's most trusted peer-to-peer rental marketplace. Cameras, cars, event gear, tools, and more — from verified owners near you.
         </p>
 
         {/* Search Bar */}
@@ -51,7 +51,7 @@ export default function HomeHero() {
           {/* Search button */}
           <button
             type="button"
-            className="flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-5 py-2 rounded-full transition-colors shrink-0"
+            className="flex items-center justify-center gap-1.5 bg-blue-900 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2 rounded-full transition-colors shrink-0"
           >
             <Search size={15} />
             <span className="hidden sm:inline">Search</span>
