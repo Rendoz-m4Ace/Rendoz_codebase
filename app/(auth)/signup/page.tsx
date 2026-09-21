@@ -103,13 +103,13 @@ export default function SignUpPage() {
       {/* ── Left panel ──────────────────────────────────────────────────── */}
       <div className="relative bg-orange-500 md:w-[45%] flex flex-col px-10 py-10 overflow-hidden min-h-[420px] md:min-h-screen">
 
-        {/* Decorative circle — top-left, large, lighter orange, partially cut off */}
-        <div className="absolute -top-16 -left-16 w-80 h-80 rounded-full bg-orange-400/70 pointer-events-none" />
-        {/* Decorative circle — bottom-right, large, lighter orange, partially cut off */}
-        <div className="absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-orange-400/70 pointer-events-none" />
+        {/* Top-left decorative circle — the logo sits inside this */}
+        <div className="absolute -top-24 -left-24 w-65 h-65 rounded-full bg-orange-400/60 pointer-events-none" />
+        {/* Bottom-right decorative circle */}
+        <div className="absolute -bottom-24 -right-16 w-65 h-65 rounded-full bg-orange-400/60 pointer-events-none" />
 
-        {/* Logo — R lettermark (deep orange italic) + "endoz" (white bold)
-            rendered directly on the orange background, matching the template */}
+        {/* Logo — positioned at top-left so it visually sits inside the circle.
+            The circle is behind (no z-index) and the logo is z-10 on top. */}
         <div className="relative z-10 mb-16">
           <Link href="/" className="inline-flex items-baseline gap-0">
             <span
