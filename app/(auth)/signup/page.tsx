@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, Phone, Mail, Lock, ShieldCheck, Banknote, RefreshCcw } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Phone, Mail, Lock, ShieldCheck, Banknote, History } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 // ---------------------------------------------------------------------------
@@ -22,14 +21,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
   if (!password) return null;
 
   const passed = PASSWORD_RULES.filter((r) => r.test(password)).length;
-
-  const segmentColors = [
-    'bg-red-400',
-    'bg-orange-400',
-    'bg-yellow-400',
-    'bg-green-500',
-  ];
-
+  const segmentColors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-500'];
   const labels = ['', 'Weak', 'Fair', 'Good', 'Strong password'];
   const labelColors = ['', 'text-red-500', 'text-orange-400', 'text-yellow-500', 'text-green-500'];
 
@@ -58,9 +50,9 @@ function PasswordStrengthBar({ password }: { password: string }) {
 // Left panel trust features
 // ---------------------------------------------------------------------------
 const TRUST_FEATURES = [
-  { icon: <ShieldCheck size={20} />, label: 'Verified owners & renters' },
-  { icon: <Banknote size={20} />, label: 'Secure payments' },
-  { icon: <RefreshCcw size={20} />, label: 'Rent only for the time you need' },
+  { icon: <ShieldCheck size={18} />, label: 'Verified owners & renters' },
+  { icon: <Banknote size={18} />, label: 'Secure payments' },
+  { icon: <History size={18} />, label: 'Rent only for the time you need' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -80,7 +72,6 @@ export default function SignUpPage() {
 
   const isLoading = status === 'loading';
 
-  // Redirect home once authenticated
   useEffect(() => {
     if (status === 'authenticated') router.push('/');
   }, [status, router]);
@@ -99,65 +90,56 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
+    if (validationError) { setError(validationError); return; }
     // TODO: Replace mock signup with real endpoint.
-    // Pass phone as the name field temporarily until backend is ready.
     const result = await signup(phone, email, password);
-
-    if (result.success) {
-      setSuccess(true);
-    } else {
-      setError(result.message);
-    }
+    if (result.success) { setSuccess(true); } else { setError(result.message); }
   };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
 
       {/* ── Left panel ──────────────────────────────────────────────────── */}
-      <div className="relative bg-orange-500 md:w-[45%] flex flex-col justify-between px-10 py-10 overflow-hidden">
+      <div className="relative bg-orange-500 md:w-[45%] flex flex-col px-10 py-10 overflow-hidden min-h-[420px] md:min-h-screen">
 
-        {/* Decorative circle — large, sits behind logo in top-left area */}
-        <div className="absolute -top-10 -left-10 w-80 h-80 rounded-full bg-white/20 pointer-events-none" />
-        {/* Decorative circle — bottom right */}
-        <div className="absolute -bottom-20 -right-10 w-72 h-72 rounded-full bg-white/10 pointer-events-none" />
+        {/* Decorative circle — top-left, large, lighter orange, partially cut off */}
+        <div className="absolute -top-16 -left-16 w-80 h-80 rounded-full bg-orange-400/70 pointer-events-none" />
+        {/* Decorative circle — bottom-right, large, lighter orange, partially cut off */}
+        <div className="absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-orange-400/70 pointer-events-none" />
 
-        {/* Logo — displayed on a white rounded pill so the navy "endoz"
-            text is readable against the orange panel, matching the template */}
-        <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center bg-white rounded-xl px-3 py-2 shadow-sm">
-            <Image
-              src="/images/logo.png"
-              alt="Rendoz"
-              width={110}
-              height={28}
-              priority
-            />
+        {/* Logo — R lettermark (deep orange italic) + "endoz" (white bold)
+            rendered directly on the orange background, matching the template */}
+        <div className="relative z-10 mb-16">
+          <Link href="/" className="inline-flex items-baseline gap-0">
+            <span
+              className="font-extrabold text-3xl italic leading-none"
+              style={{ color: '#c2410c' }}
+            >
+              R
+            </span>
+            <span className="font-bold text-2xl text-white leading-none tracking-tight">
+              endoz
+            </span>
           </Link>
         </div>
 
         {/* Tagline + description */}
-        <div className="relative z-10 flex flex-col gap-4 my-10 md:my-0">
+        <div className="relative z-10 flex flex-col gap-4 flex-1 justify-center">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
             Rent what you need.<br />
             Use it. Return it.
           </h1>
-          <p className="text-white/80 text-sm leading-relaxed max-w-xs">
+          <p className="text-white/85 text-sm leading-relaxed max-w-xs">
             Create your free account to rent what you need from verified owners — or list what you own and earn from it.
           </p>
         </div>
 
-        {/* Trust features */}
-        <ul className="relative z-10 flex flex-col gap-4">
+        {/* Trust features — pinned to bottom */}
+        <ul className="relative z-10 flex flex-col gap-4 mt-12">
           {TRUST_FEATURES.map((f) => (
-            <li key={f.label} className="flex items-center gap-3 text-white text-sm font-medium">
-              <span className="w-10 h-10 rounded-xl border border-white/50 flex items-center justify-center shrink-0">
+            <li key={f.label} className="flex items-center gap-3 text-white font-semibold text-sm">
+              <span className="w-9 h-9 rounded-lg border border-white/60 flex items-center justify-center shrink-0">
                 {f.icon}
               </span>
               {f.label}
@@ -242,7 +224,7 @@ export default function SignUpPage() {
             {/* Password */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="password" className="text-sm font-semibold text-gray-700">
-                Passeord
+                Password
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -279,11 +261,7 @@ export default function SignUpPage() {
                   onChange={(e) => setAgreed(e.target.checked)}
                   className="sr-only"
                 />
-                <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    agreed ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'
-                  }`}
-                >
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${agreed ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'}`}>
                   {agreed && (
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -310,10 +288,7 @@ export default function SignUpPage() {
               className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {isLoading ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  Creating account…
-                </>
+                <><Loader2 size={16} className="animate-spin" />Creating account…</>
               ) : (
                 'Create Account'
               )}
