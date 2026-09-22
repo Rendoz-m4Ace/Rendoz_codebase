@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import RendozLogo from '@/component/brand/RendozLogo';
 
 const footerLinks: Record<string, string[]> = {
   Product: ['Explore', 'Categories', 'How it works', 'Pricing'],
@@ -57,13 +57,7 @@ export default function HomeFooter() {
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 pb-10 border-b border-white/10">
           {/* Brand column */}
           <div className="col-span-2">
-            <Image
-              src="/images/logo.png"
-              alt="Rendoz"
-              width={110}
-              height={30}
-              className="brightness-0 invert"
-            />
+            <RendozLogo variant="on-dark" />
             <p className="mt-4 text-sm text-white/50 leading-relaxed max-w-xs">
               The peer-to-peer rental marketplace for Nigerians. Rent anything, list everything.
             </p>
