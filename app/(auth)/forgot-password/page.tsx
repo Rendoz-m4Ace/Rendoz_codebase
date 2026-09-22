@@ -1,217 +1,193 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { Loader2, Mail, ArrowLeft, MailCheck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Eye, EyeOff, KeyRound, Lock, Mail } from 'lucide-react';
+import AuthShell from '@/component/auth/AuthShell';
+import OtpInput from '@/component/auth/OtpInput';
+import PrimaryButton from '@/component/auth/PrimaryButton';
+import { useCountdown } from '@/component/auth/useCountdown';
+import { isValidEmail, passwordStrength } from '@/lib/validation';
+import {
+  mockRequestPasswordReset,
+  mockResendOtp,
+  mockResetPassword,
+  mockVerifyResetCode,
+} from '@/lib/mock-auth';
 
-// ---------------------------------------------------------------------------
-// UI states
-// ---------------------------------------------------------------------------
-type PageState = 'idle' | 'loading' | 'sent' | 'error';
+type ResetStep = 'email' | 'code' | 'password';
 
-// ---------------------------------------------------------------------------
-// Mock reset request
-// TODO: Replace with authentication API integration.
-// ---------------------------------------------------------------------------
-async function requestPasswordReset(email: string): Promise<{ success: boolean; message: string }> {
-  // Simulate network latency
-  await new Promise((r) => setTimeout(r, 1200));
-
-  // TODO: Replace mock logout with real session/token invalidation.
-  // For now every well-formed email succeeds so the UI flow can be tested.
-  if (!email.trim()) {
-    return { success: false, message: 'Please enter your email address.' };
-  }
-
-  // TODO: Replace mock login with real endpoint.
-  return { success: true, message: 'Reset instructions sent.' };
-}
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 export default function ForgotPasswordPage() {
+  const router = useRouter();
+  const [step, setStep] = useState<ResetStep>('email');
   const [email, setEmail] = useState('');
-  const [pageState, setPageState] = useState<PageState>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const countdown = useCountdown(59);
 
-  const isLoading = pageState === 'loading';
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
-
-    if (!email.trim()) {
-      setErrorMessage('Please enter your email address.');
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrorMessage('Please enter a valid email address.');
-      return;
-    }
-
-    setPageState('loading');
-
-    // TODO: Replace mock reset request with real password-reset endpoint.
-    const result = await requestPasswordReset(email);
-
-    if (result.success) {
-      setPageState('sent');
-    } else {
-      setErrorMessage(result.message);
-      setPageState('error');
-    }
+    setError('');
+    if (!isValidEmail(email)) return setError('Please enter a valid email address.');
+    setLoading(true);
+    const result = await mockRequestPasswordReset(email);
+    setLoading(false);
+    if (!result.success) return setError(result.message);
+    countdown.reset();
+    setStep('code');
   };
 
-  // -------------------------------------------------------------------------
-  // Sent confirmation state
-  // -------------------------------------------------------------------------
-  if (pageState === 'sent') {
-    return (
-      <div className="min-h-screen bg-[#E8EEF5] flex flex-col items-center justify-center px-4 py-12">
-        <Link href="/" className="mb-8 flex-shrink-0">
-          <Image src="/images/logo.png" alt="Rendoz" width={120} height={32} priority />
-        </Link>
+  const handleCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    const code = otp.join('');
+    if (code.length < 6) return setError('Please enter the full 6-digit code.');
+    setLoading(true);
+    const result = await mockVerifyResetCode(email, code);
+    setLoading(false);
+    if (!result.success) return setError(result.message);
+    setStep('password');
+  };
 
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center text-center">
-          {/* Icon */}
-          <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center mb-5">
-            <MailCheck size={30} className="text-orange-500" />
+  const handlePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (passwordStrength(password) < 3) return setError('Please choose a stronger password.');
+    if (password !== confirmPassword) return setError('Passwords do not match.');
+    setLoading(true);
+    const result = await mockResetPassword(email, password);
+    setLoading(false);
+    if (!result.success) return setError(result.message);
+    router.push('/signin');
+  };
+
+  return (
+    <AuthShell>
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
+          {error}
+        </p>
+      )}
+
+      {step === 'email' && (
+        <>
+          <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-5">
+            <KeyRound size={28} className="text-blue-500" />
           </div>
-
-          <h1 className="text-2xl font-bold text-gray-900">Check your inbox</h1>
-          <p className="text-sm text-gray-500 mt-2 max-w-sm leading-relaxed">
-            We&apos;ve sent password reset instructions to{' '}
-            <span className="font-semibold text-gray-700">{email}</span>.
-            Check your spam folder if you don&apos;t see it.
+          <h1 className="text-3xl font-extrabold text-gray-900">Reset your password</h1>
+          <p className="text-sm text-gray-500 mt-2 mb-6">
+            Enter the email address associated with your account and we&apos;ll send a reset link.
           </p>
-
-          {/* Resend */}
-          <p className="mt-6 text-sm text-gray-500">
-            Didn&apos;t receive it?{' '}
-            <button
-              type="button"
-              onClick={() => setPageState('idle')}
-              className="text-orange-500 font-semibold hover:underline"
-            >
-              Try again
-            </button>
-          </p>
-
-          {/* Divider */}
-          <div className="w-full h-px bg-gray-100 my-6" />
-
+          <form onSubmit={handleEmail} className="flex flex-col gap-5">
+            <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
+              Email address
+              <span className="relative font-normal">
+                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="example@gmail.com"
+                  className="w-full min-h-12 pl-10 pr-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </span>
+            </label>
+            <PrimaryButton loading={loading}>Send Reset Link</PrimaryButton>
+          </form>
           <Link
             href="/signin"
-            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+            className="flex items-center justify-center gap-1.5 text-sm text-gray-600 mt-6 min-h-11"
           >
-            <ArrowLeft size={15} />
-            Back to Sign in
+            <ArrowLeft size={15} /> Back to sign in
           </Link>
-        </div>
+        </>
+      )}
 
-        <Link href="/" className="mt-6 text-xs text-gray-400 hover:text-gray-600 transition-colors">
-          ← Back to homepage
-        </Link>
-      </div>
-    );
-  }
-
-  // -------------------------------------------------------------------------
-  // Default / error state — the email form
-  // -------------------------------------------------------------------------
-  return (
-    <div className="min-h-screen bg-[#E8EEF5] flex flex-col items-center justify-center px-4 py-12">
-
-      {/* Logo */}
-      <Link href="/" className="mb-8 flex-shrink-0">
-        <Image src="/images/logo.png" alt="Rendoz" width={120} height={32} priority />
-      </Link>
-
-      {/* Card */}
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-
-        {/* Icon + Heading */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center mb-4">
-            <Mail size={26} className="text-orange-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Forgot your password?</h1>
-          <p className="text-sm text-gray-500 mt-1.5 max-w-xs leading-relaxed">
-            No worries. Enter the email linked to your account and we&apos;ll send reset instructions.
-          </p>
-        </div>
-
-        {/* Error state */}
-        {pageState === 'error' && errorMessage && (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-5">
-            {errorMessage}
-          </p>
-        )}
-
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-
-          {/* Email */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (pageState === 'error') {
-                  setPageState('idle');
-                  setErrorMessage('');
-                }
+      {step === 'code' && (
+        <div className="text-center">
+          <h1 className="text-3xl font-extrabold text-gray-900">Enter reset code</h1>
+          <p className="text-sm text-gray-500 mt-2">Enter the 6-digit code from your email</p>
+          <form onSubmit={handleCode} className="mt-8 flex flex-col gap-5">
+            <OtpInput value={otp} onChange={setOtp} disabled={loading} />
+            <PrimaryButton loading={loading}>Continue</PrimaryButton>
+          </form>
+          {countdown.remaining > 0 ? (
+            <p className="text-sm text-gray-500 mt-4 min-h-11 flex items-center justify-center">
+              Resend available in {countdown.fmt}
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="mt-4 text-sm text-gray-800 font-medium min-h-11 inline-flex items-center gap-1"
+              onClick={async () => {
+                await mockResendOtp('reset', email);
+                countdown.reset();
+                setOtp(Array(6).fill(''));
               }}
-              placeholder="you@example.com"
-              disabled={isLoading}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-1"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Sending…
-              </>
-            ) : (
-              'Send reset instructions'
-            )}
-          </button>
-        </form>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-gray-100" />
+            >
+              <ArrowLeft size={14} /> Resend reset mail
+            </button>
+          )}
         </div>
+      )}
 
-        {/* Back to sign in */}
-        <Link
-          href="/signin"
-          className="flex items-center justify-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft size={15} />
-          Back to Sign in
-        </Link>
-      </div>
-
-      {/* Back to home */}
-      <Link href="/" className="mt-6 text-xs text-gray-400 hover:text-gray-600 transition-colors">
-        ← Back to homepage
-      </Link>
-    </div>
+      {step === 'password' && (
+        <>
+          <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-5">
+            <Lock size={28} className="text-blue-500" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-gray-900">Enter new password</h1>
+          <form onSubmit={handlePassword} className="mt-8 flex flex-col gap-4">
+            <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
+              New password
+              <span className="relative font-normal">
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full min-h-12 pl-10 pr-11 border border-orange-400 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 min-h-11 min-w-11 flex items-center justify-center text-gray-400"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </span>
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
+              Password
+              <span className="relative font-normal">
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full min-h-12 pl-10 pr-11 border border-orange-400 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 min-h-11 min-w-11 flex items-center justify-center text-gray-400"
+                  aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </span>
+            </label>
+            <PrimaryButton loading={loading}>Reset Password</PrimaryButton>
+          </form>
+        </>
+      )}
+    </AuthShell>
   );
 }
