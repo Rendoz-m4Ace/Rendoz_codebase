@@ -20,7 +20,17 @@ function getClientIP(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body: unknown;
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'Invalid JSON body.' },
+        { status: 400 }
+      );
+    }
+
     const result = waitlistSchema.safeParse(body);
 
     if (!result.success) {
@@ -33,41 +43,27 @@ export async function POST(request: NextRequest) {
     const { email } = result.data;
     const ipAddress = getClientIP(request);
 
-    try {
-      const rateLimitOk = await checkRateLimit(ipAddress);
-      if (!rateLimitOk) {
-        return NextResponse.json(
-          { success: false, message: 'Too many attempts. Please try again later.' },
-          { status: 429 }
-        );
-      }
-    } catch (e) {
-      console.error('Rate limit Redis error:', e);
+    const rateLimitOk = await checkRateLimit(ipAddress);
+    if (!rateLimitOk) {
       return NextResponse.json(
-        { success: false, message: 'Service temporarily unavailable. Please try again.' },
-        { status: 503 }
+        { success: false, message: 'Too many attempts. Please try again later.' },
+        { status: 429 }
       );
     }
 
-    try {
-      const dbResult = await addEmail(email, ipAddress);
+    const dbResult = await addEmail(email, ipAddress);
 
-      if (dbResult.success) {
-        return NextResponse.json({ success: true, message: dbResult.message });
-      } else {
-        return NextResponse.json(
-          { success: false, message: dbResult.message },
-          { status: 409 }
-        );
-      }
-    } catch (e) {
-      console.error('addEmail Redis error:', e);
-      const msg = e instanceof Error && e.message.includes('Missing Upstash') ? e.message : 'Failed to connect to database';
+    if (!dbResult.success) {
       return NextResponse.json(
-        { success: false, message: msg },
-        { status: 503 }
+        { success: false, message: dbResult.message },
+        { status: 409 }
       );
     }
+
+    return NextResponse.json(
+      { success: true, message: dbResult.message },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Waitlist POST error:', error);
     return NextResponse.json(

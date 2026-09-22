@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.49.4",
-    "@upstash/redis": "^1.38.3",
+    "@upstash/redis": "^1.38.4",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^13.1.1",
     "jose": "5.10.0",
