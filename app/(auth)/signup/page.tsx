@@ -5,16 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  Calendar,
   Check,
   Eye,
   EyeOff,
-  IdCard,
   Lock,
   Mail,
-  Phone,
-  ShieldCheck,
-  Smartphone,
 } from 'lucide-react';
 import AuthShell from '@/component/auth/AuthShell';
 import OtpInput from '@/component/auth/OtpInput';
@@ -23,25 +18,17 @@ import GoogleButton from '@/component/auth/GoogleButton';
 import { useCountdown } from '@/component/auth/useCountdown';
 import { useAuth } from '@/context/AuthContext';
 import {
-  formatDobInput,
-  formatNin,
-  isValidDob,
   isValidEmail,
-  isValidNgPhone,
-  isValidNin,
   passwordStrength,
 } from '@/lib/validation';
 import {
   mockCreateAccount,
   mockGoogleAuth,
   mockResendOtp,
-  mockSendPhoneOtp,
   mockVerifyEmailOtp,
-  mockVerifyNin,
-  mockVerifyPhoneOtp,
 } from '@/lib/mock-auth';
 
-type SignupStep = 'details' | 'email-otp' | 'phone' | 'phone-otp' | 'nin';
+type SignupStep = 'details' | 'email-otp';
 
 const STORAGE_KEY = 'rendoz_signup_flow';
 
@@ -50,7 +37,6 @@ interface SignupDraft {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
 }
 
 function PasswordStrengthBar({ password }: { password: string }) {
@@ -75,10 +61,8 @@ function PasswordStrengthBar({ password }: { password: string }) {
 }
 
 function stepLabel(step: SignupStep): string {
-  if (step === 'details') return 'Step 1 of 4';
-  if (step === 'email-otp') return 'Step 2 of 4';
-  if (step === 'phone' || step === 'phone-otp') return 'Step 3 of 4';
-  return 'Step 4 of 4';
+  if (step === 'details') return 'Step 1 of 2';
+  return 'Step 2 of 2';
 }
 
 export default function SignUpPage() {
@@ -94,16 +78,11 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
-  const [phone, setPhone] = useState('');
   const [emailOtp, setEmailOtp] = useState<string[]>(Array(6).fill(''));
-  const [phoneOtp, setPhoneOtp] = useState<string[]>(Array(6).fill(''));
-  const [nin, setNin] = useState('');
-  const [dob, setDob] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const emailCountdown = useCountdown(59);
-  const phoneCountdown = useCountdown(59);
 
   useEffect(() => {
     try {
@@ -114,7 +93,6 @@ export default function SignUpPage() {
         setFirstName(draft.firstName);
         setLastName(draft.lastName);
         setEmail(draft.email);
-        setPhone(draft.phone);
       }
     } catch {
       /* ignore */
@@ -125,9 +103,9 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (!hydrated) return;
-    const draft: SignupDraft = { step, firstName, lastName, email, phone };
+    const draft: SignupDraft = { step, firstName, lastName, email };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-  }, [hydrated, step, firstName, lastName, email, phone]);
+  }, [hydrated, step, firstName, lastName, email]);
 
   useEffect(() => {
     if (status === 'authenticated') router.push('/');
@@ -168,44 +146,6 @@ export default function SignUpPage() {
     if (code.length < 6) return setError('Please enter the full 6-digit code.');
     setLoading(true);
     const result = await mockVerifyEmailOtp(email, code);
-    setLoading(false);
-    if (!result.success) return setError(result.message);
-    goTo('phone');
-  };
-
-  const handlePhone = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!isValidNgPhone(phone)) {
-      return setError('Enter a valid Nigerian phone number, e.g. 0803 123 4567.');
-    }
-    setLoading(true);
-    const result = await mockSendPhoneOtp(phone);
-    setLoading(false);
-    if (!result.success) return setError(result.message);
-    phoneCountdown.reset();
-    goTo('phone-otp');
-  };
-
-  const handlePhoneOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    const code = phoneOtp.join('');
-    if (code.length < 6) return setError('Please enter the full 6-digit code.');
-    setLoading(true);
-    const result = await mockVerifyPhoneOtp(phone, code);
-    setLoading(false);
-    if (!result.success) return setError(result.message);
-    goTo('nin');
-  };
-
-  const handleNin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!isValidNin(nin)) return setError('NIN must be 11 digits.');
-    if (!isValidDob(dob)) return setError('Enter a valid date of birth (DD/MM/YYYY). You must be 18+.');
-    setLoading(true);
-    const result = await mockVerifyNin({ nin, dateOfBirth: dob });
     setLoading(false);
     if (!result.success) return setError(result.message);
     sessionStorage.removeItem(STORAGE_KEY);
@@ -383,145 +323,6 @@ export default function SignUpPage() {
             className="flex items-center gap-1.5 text-sm text-gray-500 mt-6 min-h-11"
           >
             <ArrowLeft size={15} /> Back to sign up
-          </button>
-        </div>
-      )}
-
-      {step === 'phone' && (
-        <div className="flex flex-col">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-5 mx-auto">
-            <Phone size={28} className="text-blue-400" />
-          </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 text-center">Enter your phone number</h2>
-          <p className="text-sm text-gray-500 mt-2 text-center">
-            We&apos;ll send a 6-digit verification code to this number
-          </p>
-          <form onSubmit={handlePhone} className="mt-8 flex flex-col gap-5">
-            <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
-              Phone number
-              <span className="relative font-normal">
-                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="0803 000 0000"
-                  className="w-full min-h-12 pl-10 pr-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </span>
-            </label>
-            <PrimaryButton loading={loading}>Send code</PrimaryButton>
-          </form>
-          <button
-            type="button"
-            onClick={() => goTo('email-otp')}
-            className="flex items-center justify-center gap-1.5 text-sm text-gray-500 mt-6 min-h-11"
-          >
-            <ArrowLeft size={15} /> Back to email verification
-          </button>
-        </div>
-      )}
-
-      {step === 'phone-otp' && (
-        <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-5">
-            <Smartphone size={28} className="text-blue-400" />
-          </div>
-          <h2 className="text-2xl font-extrabold text-gray-900">Enter verification code</h2>
-          <p className="text-sm text-gray-500 mt-2 max-w-xs">
-            We sent a 6-digit verification code to your phone
-          </p>
-          <form onSubmit={handlePhoneOtp} className="w-full mt-8 flex flex-col gap-5">
-            <OtpInput value={phoneOtp} onChange={setPhoneOtp} disabled={loading} />
-            <PrimaryButton loading={loading}>Verify Phone</PrimaryButton>
-            <p className="text-sm">
-              {phoneCountdown.remaining > 0 ? (
-                <span className="text-blue-600 font-semibold">
-                  Resend code <span className="text-gray-900">{phoneCountdown.fmt}</span>
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  className="text-blue-600 font-semibold min-h-11"
-                  onClick={async () => {
-                    await mockResendOtp('phone', phone);
-                    phoneCountdown.reset();
-                    setPhoneOtp(Array(6).fill(''));
-                  }}
-                >
-                  Resend code
-                </button>
-              )}
-            </p>
-          </form>
-          <button
-            type="button"
-            onClick={() => goTo('phone')}
-            className="flex items-center gap-1.5 text-sm text-gray-500 mt-6 min-h-11"
-          >
-            <ArrowLeft size={15} /> Change phone number
-          </button>
-        </div>
-      )}
-
-      {step === 'nin' && (
-        <div>
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-5 mx-auto">
-            <IdCard size={28} className="text-blue-400" />
-          </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 text-center">Identity Verification</h2>
-          <p className="text-sm text-gray-500 mt-2 text-center">
-            Enter your National Identification Number (NIN) to verify your identity. This is required
-            to comply with KYC regulations.
-          </p>
-          <form onSubmit={handleNin} className="mt-8 flex flex-col gap-4">
-            <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
-              NIN (National Identification Number)
-              <span className="relative font-normal">
-                <IdCard size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  inputMode="numeric"
-                  value={formatNin(nin)}
-                  onChange={(e) => setNin(e.target.value)}
-                  placeholder="0000 0000 000"
-                  className="w-full min-h-12 pl-10 pr-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </span>
-              <span className="text-xs font-normal text-gray-400">
-                Your 11-digit NIN from your national ID card or slip
-              </span>
-            </label>
-            <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
-              Date of birth
-              <span className="relative font-normal">
-                <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  value={dob}
-                  onChange={(e) => setDob(formatDobInput(e.target.value))}
-                  placeholder="DD/MM/YYYY"
-                  className="w-full min-h-12 pl-10 pr-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </span>
-              <span className="text-xs font-normal text-gray-400">Must match your NIN records</span>
-            </label>
-            <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3">
-              <p className="text-sm font-semibold text-[#1B2B6B] flex items-center gap-2">
-                <ShieldCheck size={16} /> How we use your NIN
-              </p>
-              <ul className="mt-2 text-xs text-gray-600 space-y-1 list-disc list-inside">
-                <li>Identity verification only — never stored in full</li>
-                <li>Encrypted in transit using TLS 1.3</li>
-                <li>Compliant with NDPR and CBN guidelines</li>
-              </ul>
-            </div>
-            <PrimaryButton loading={loading}>Verify Identity</PrimaryButton>
-          </form>
-          <button
-            type="button"
-            onClick={() => goTo('phone-otp')}
-            className="flex items-center justify-center gap-1.5 text-sm text-gray-500 mt-6 min-h-11 w-full"
-          >
-            <ArrowLeft size={15} /> Back to phone verification
           </button>
         </div>
       )}
