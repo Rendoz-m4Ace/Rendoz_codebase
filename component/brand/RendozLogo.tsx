@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 type LogoVariant = 'on-dark' | 'on-light';
 
@@ -13,15 +14,25 @@ export default function RendozLogo({
   variant = 'on-light',
   className = '',
 }: RendozLogoProps) {
-  const endozClass = variant === 'on-dark' ? 'text-white' : 'text-slate-700';
+  const mark =  (
+    <div className={`inline-flex items-center ${className}`}>
+      <Image
+        src="/images/logo.png"
+        alt="Rendoz logo"
+        width={160}
+        height={42}
+        // className='h-8 w-auto object-contain'
+        priority
+      />
+    </div>
 
-  const mark = (
-    <span className={`inline-flex items-baseline leading-none ${className}`}>
-      <span className="font-extrabold italic text-[28px] sm:text-[32px] text-orange-500">R</span>
-      <span className={`font-bold text-[20px] sm:text-[22px] tracking-tight ${endozClass}`}>
-        endoz
-      </span>
-    </span>
+  // const mark = (
+  //   <span className={`inline-flex items-baseline leading-none ${className}`}>
+  //     <span className="font-extrabold italic text-[28px] sm:text-[32px] text-orange-500">R</span>
+  //     <span className={`font-bold text-[20px] sm:text-[22px] tracking-tight ${endozClass}`}>
+  //       endoz
+  //     </span>
+  //   </span>
   );
 
   if (!href) return mark;
