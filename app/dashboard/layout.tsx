@@ -170,27 +170,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        {/* Desktop top bar */}
-        <header className="hidden lg:flex sticky top-0 z-30 bg-white border-b border-gray-100 px-8 h-14 items-center justify-between gap-4">
-          <RendozLogo variant="on-light" />
-          <nav className="flex items-center gap-6 text-sm font-medium text-gray-600">
-            <Link href="/" className="hover:text-gray-900 transition-colors">Browse</Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="min-h-9 px-4 rounded-full border border-orange-500 text-orange-500 text-sm font-semibold hover:bg-orange-50 transition-colors"
-            >
-              Switch to Renting
-            </Link>
-            <Link
-              href="/dashboard/listings/new"
-              className="min-h-9 px-4 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors flex items-center gap-1.5"
-            >
-              <Plus size={14} /> List an Item
-            </Link>
-          </div>
-        </header>
 
         {/* Page content */}
         <main className="flex-1 p-4 md:p-6 lg:p-8">
