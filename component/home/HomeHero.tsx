@@ -44,7 +44,7 @@ export default function HomeHero() {
             <br />
             List everything.
           </h1>
-          <p className="mt-4 text-sm sm:text-base text-white/70 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-4 text-sm sm:text-base text-white/70 max-w-xl mx-auto leading-relaxed px-2">
             Nigeria&apos;s most trusted peer-to-peer rental marketplace. Cameras, cars, event gear,
             tools, and more — from verified owners near you.
           </p>
@@ -53,27 +53,54 @@ export default function HomeHero() {
             onSubmit={(e) => {
               e.preventDefault();
             }}
-            className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0 bg-white rounded-full shadow-lg px-2 py-2 max-w-2xl mx-auto"
+            className="mt-8 max-w-2xl mx-auto"
           >
-            <div className="flex items-center gap-1.5 px-4 py-2 sm:border-r border-gray-200 text-sm text-gray-600 shrink-0 min-h-11">
-              <MapPin size={16} className="text-orange-500" />
-              <span className="font-medium">Lagos</span>
+            {/* Desktop: single pill row */}
+            <div className="hidden sm:flex items-center bg-white rounded-full shadow-lg px-2 py-2">
+              <div className="flex items-center gap-1.5 px-4 py-2 border-r border-gray-200 text-sm text-gray-600 shrink-0 min-h-11">
+                <MapPin size={16} className="text-orange-500" />
+                <span className="font-medium">Lagos</span>
+              </div>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search for items to rent…"
+                className="flex-1 px-4 py-2 text-sm text-gray-800 placeholder-gray-400 bg-transparent focus:outline-none min-w-0 min-h-11"
+              />
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold min-h-11 px-6 rounded-full transition-colors shrink-0"
+                aria-label="Search"
+              >
+                <Search size={16} />
+                <span>Search</span>
+              </button>
             </div>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for items to rent…"
-              className="flex-1 px-4 py-2 text-sm text-gray-800 placeholder-gray-400 bg-transparent focus:outline-none min-w-0 min-h-11"
-            />
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-1.5 self-end sm:self-auto bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold min-h-11 min-w-11 px-5 rounded-full transition-colors shrink-0"
-              aria-label="Search"
-            >
-              <Search size={16} />
-              <span className="sm:hidden">Search</span>
-            </button>
+
+            {/* Mobile: stacked layout */}
+            <div className="flex sm:hidden flex-col gap-3">
+              <div className="flex items-center bg-white rounded-2xl shadow-lg px-4 py-1 gap-2">
+                <MapPin size={16} className="text-orange-500 shrink-0" />
+                <span className="text-sm font-medium text-gray-600 shrink-0">Lagos</span>
+                <div className="w-px h-5 bg-gray-200 mx-1" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search for items to rent…"
+                  className="flex-1 py-3 text-sm text-gray-800 placeholder-gray-400 bg-transparent focus:outline-none min-w-0"
+                />
+              </div>
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold h-12 rounded-2xl transition-colors"
+                aria-label="Search"
+              >
+                <Search size={16} />
+                <span>Search</span>
+              </button>
+            </div>
           </form>
 
           <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-white/60">
