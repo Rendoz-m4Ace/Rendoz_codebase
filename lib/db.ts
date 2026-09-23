@@ -56,7 +56,7 @@ export async function addEmail(email: string, ipAddress?: string, source: string
     return { success: true, message: "You've been added to the waitlist!" };
   } catch (error) {
     console.error('Failed to add email:', error);
-    return { success: false, message: 'Failed to add email. Please try again.' };
+    throw new Error('Failed to add email. Please try again.', { cause: error });
   }
 }
 
