@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
   User, MapPin, Calendar, Mail, Phone, CheckCircle2, CreditCard,
@@ -200,7 +200,7 @@ function ContactRow({ icon: Icon, label, badge, value, actionLabel, onAction }: 
    Main Page
 ═══════════════════════════════════════════════════════ */
 export default function DashboardProfilePage() {
-  const { user } = useAuth();
+  const { user, markProfileComplete } = useAuth();
 
   /* Use auth name/email, fall back to display values */
   const [fullName, setFullName] = useState(user?.name ?? 'Amara Okafor');
@@ -228,6 +228,11 @@ export default function DashboardProfilePage() {
   const progressPercent = Math.round((completedCount / totalCount) * 100);
   const allComplete = completedCount === totalCount;
   const listingUnlocked = profile.ninVerified && !!profile.payoutBankName;
+
+  // Sync profile completion into AuthContext so the layout can gate listing creation
+  useEffect(() => {
+    if (allComplete) markProfileComplete();
+  }, [allComplete, markProfileComplete]);
 
   /* ── Masked account for display ── */
   const maskedAccount = profile.payoutAccountNumber
