@@ -36,13 +36,13 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between px-4 md:px-8">
           {/* Logo */}
           <div className="flex items-center">
-            <Image
-              src="/images/logo.png"
-              alt="RendOz logo"
+            {/* <Image
+              src="/images/image.svg"
+              alt="Rendoz logo"
               width={120}
               height={32}
               priority
-            />
+            /> */}
           </div>
 
           {/* Desktop Links */}
