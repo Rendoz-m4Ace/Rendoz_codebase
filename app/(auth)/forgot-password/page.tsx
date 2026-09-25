@@ -8,13 +8,8 @@ import AuthShell from '@/component/auth/AuthShell';
 import OtpInput from '@/component/auth/OtpInput';
 import PrimaryButton from '@/component/auth/PrimaryButton';
 import { useCountdown } from '@/component/auth/useCountdown';
-import { isValidEmail, passwordStrength } from '@/lib/validation';
-import {
-  mockRequestPasswordReset,
-  mockResendOtp,
-  mockResetPassword,
-  mockVerifyResetCode,
-} from '@/lib/mock-auth';
+import { authApi } from '@/lib/api-client';
+import { isValidEmail, passwordServerError } from '@/lib/validation';
 
 type ResetStep = 'email' | 'code' | 'password';
 
@@ -36,9 +31,9 @@ export default function ForgotPasswordPage() {
     setError('');
     if (!isValidEmail(email)) return setError('Please enter a valid email address.');
     setLoading(true);
-    const result = await mockRequestPasswordReset(email);
+    const result = await authApi.forgotPassword(email.trim());
     setLoading(false);
-    if (!result.success) return setError(result.message);
+    if (!result.ok) return setError(result.error);
     countdown.reset();
     setStep('code');
   };
@@ -48,22 +43,32 @@ export default function ForgotPasswordPage() {
     setError('');
     const code = otp.join('');
     if (code.length < 6) return setError('Please enter the full 6-digit code.');
-    setLoading(true);
-    const result = await mockVerifyResetCode(email, code);
-    setLoading(false);
-    if (!result.success) return setError(result.message);
+    // The API checks the code together with the new password in the final step
     setStep('password');
   };
 
   const handlePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (passwordStrength(password) < 3) return setError('Please choose a stronger password.');
+    const passwordError = passwordServerError(password);
+    if (passwordError) return setError(passwordError);
     if (password !== confirmPassword) return setError('Passwords do not match.');
     setLoading(true);
-    const result = await mockResetPassword(email, password);
+    const result = await authApi.resetPassword({
+      email: email.trim(),
+      code: otp.join(''),
+      new_password: password,
+    });
     setLoading(false);
-    if (!result.success) return setError(result.message);
+    if (!result.ok) {
+      setError(result.error);
+      // A bad or expired code has to be re-entered, not the password
+      if (/code/i.test(result.error)) {
+        setOtp(Array(6).fill(''));
+        setStep('code');
+      }
+      return;
+    }
     router.push('/signin');
   };
 
@@ -82,7 +87,7 @@ export default function ForgotPasswordPage() {
           </div>
           <h1 className="text-3xl font-extrabold text-gray-900">Reset your password</h1>
           <p className="text-sm text-gray-500 mt-2 mb-6">
-            Enter the email address associated with your account and we&apos;ll send a reset link.
+            Enter the email address associated with your account and we&apos;ll send you a reset code.
           </p>
           <form onSubmit={handleEmail} className="flex flex-col gap-5">
             <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
@@ -98,7 +103,7 @@ export default function ForgotPasswordPage() {
                 />
               </span>
             </label>
-            <PrimaryButton loading={loading}>Send Reset Link</PrimaryButton>
+            <PrimaryButton loading={loading}>Send Reset Code</PrimaryButton>
           </form>
           <Link
             href="/signin"
@@ -126,7 +131,9 @@ export default function ForgotPasswordPage() {
               type="button"
               className="mt-4 text-sm text-gray-800 font-medium min-h-11 inline-flex items-center gap-1"
               onClick={async () => {
-                await mockResendOtp('reset', email);
+                setError('');
+                const result = await authApi.resendResetOtp(email.trim());
+                if (!result.ok) return setError(result.error);
                 countdown.reset();
                 setOtp(Array(6).fill(''));
               }}

@@ -13,12 +13,48 @@ env:
     VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
     VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
+    # App configuration, stored as GitHub repository secrets
+    # (Settings → Secrets and variables → Actions). See .env.example.
+    SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+    JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+    UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+    UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+    ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+    EMAIL_ENABLED: ${{ secrets.EMAIL_ENABLED }}
+    RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+    EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+
 jobs:
     Deploy-Production:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Code
               uses: actions/checkout@v4
+
+            - name: Check Required Secrets
+              # Prints only the names of missing secrets, never their values
+              run: |
+                  missing=0
+                  for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID \
+                              SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY \
+                              JWT_ACCESS_SECRET JWT_REFRESH_SECRET \
+                              UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN ADMIN_PASSWORD; do
+                      if [ -z "${!name}" ]; then
+                          echo "::error::Missing GitHub secret: $name"
+                          missing=1
+                      else
+                          echo "✓ $name is set"
+                      fi
+                  done
+                  if [ "$EMAIL_ENABLED" = "true" ] && [ -z "$RESEND_API_KEY" ]; then
+                      echo "::error::EMAIL_ENABLED is true but RESEND_API_KEY is missing"
+                      missing=1
+                  fi
+                  exit $missing
+              env:
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
             - name: Install Node.js
               uses: actions/setup-node@v4
@@ -28,11 +64,25 @@ jobs:
             - name: Install Vercel CLI
               run: npm install --global vercel@latest
 
-            - name: Pull Vercel Environment Information
+            - name: Pull Vercel Project Settings
               run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
             - name: Build Project Artifacts
+              # The job-level env above is visible to the build
               run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
             - name: Deploy Project Artifacts to Vercel
-              run: vercel deploy --prebuilt --archive=tgz --prod --token=${{ secrets.VERCEL_TOKEN }}
+              # --env hands the secrets to the deployed API routes at runtime.
+              # Optional values are only sent when set, so Vercel-side values are not blanked.
+              run: |
+                  args=()
+                  for name in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY \
+                              JWT_ACCESS_SECRET JWT_REFRESH_SECRET \
+                              UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN ADMIN_PASSWORD \
+                              EMAIL_ENABLED RESEND_API_KEY EMAIL_FROM; do
+                      if [ -n "${!name}" ]; then
+                          args+=(--env "$name=${!name}")
+                          echo "→ passing $name to the deployment"
+                      fi
+                  done
+                  vercel deploy --prebuilt --archive=tgz --prod "${args[@]}" --token=${{ secrets.VERCEL_TOKEN }}

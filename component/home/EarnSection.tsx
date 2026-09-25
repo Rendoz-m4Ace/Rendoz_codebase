@@ -27,7 +27,7 @@ export default function EarnSection() {
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <Link
-              href="/signup"
+              href="/signup?role=owner"
               className="min-h-11 inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-6 rounded-full"
             >
               START LISTING

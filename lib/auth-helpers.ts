@@ -41,13 +41,25 @@ export function hashToken(token: string): string {
 
 // ── Safe public user ─────────────────────────────────────────────────────────
 
-/** Strips sensitive fields before returning user data to the client. */
+/**
+ * Picks the fields the client is allowed to see. An allowlist (not a blocklist)
+ * so extra DB columns — secrets or leftovers from older schemas — never leak.
+ */
 export function sanitizeUser(user: DbUser) {
-  const {
-    password_hash: _pw,
-    ...safe
-  } = user;
-  return safe;
+  return {
+    id: user.id,
+    full_name: user.full_name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    is_email_verified: user.is_email_verified,
+    verification_status: user.verification_status,
+    profile_photo: user.profile_photo,
+    location: user.location,
+    profile: user.profile ?? {},
+    profile_completed: user.profile_completed ?? false,
+    created_at: user.created_at,
+  };
 }
 
 // ── Cookie helpers ───────────────────────────────────────────────────────────
@@ -123,34 +135,25 @@ export async function issueTokenPair(user: DbUser): Promise<{
     is_email_verified: user.is_email_verified,
   });
 
-  // 2. Sign refresh token — we need the DB id first so we can put it in jti
-  //    Insert a placeholder row, then update jti once we have both the id and token.
-  const expiresAt = refreshTokenExpiresAt();
-
-  // Generate raw refresh token value
-  const rawRefreshToken = crypto.randomBytes(64).toString("hex");
-  const tokenHash = hashToken(rawRefreshToken);
-
-  // 3. Store hashed refresh token in DB
-  const { data: rtRow, error } = await supabase
-    .from("refresh_tokens")
-    .insert({
-      user_id: user.id,
-      token_hash: tokenHash,
-      expires_at: expiresAt.toISOString(),
-    })
-    .select("id")
-    .single();
-
-  if (error || !rtRow) {
-    throw new Error("Failed to persist refresh token.");
-  }
-
-  // 4. Sign the actual refresh JWT with the DB row id as jti
+  // 2. Sign the refresh JWT with a pre-generated row id as its jti
+  const tokenId = crypto.randomUUID();
   const refreshToken = await signRefreshToken({
     sub: user.id,
-    jti: rtRow.id,
+    jti: tokenId,
   });
+
+  // 3. Store the hash of the exact token we put in the cookie, so
+  //    /refresh and /logout can match it by hashing the cookie value
+  const { error } = await supabase.from("refresh_tokens").insert({
+    id: tokenId,
+    user_id: user.id,
+    token_hash: hashToken(refreshToken),
+    expires_at: refreshTokenExpiresAt().toISOString(),
+  });
+
+  if (error) {
+    throw new Error("Failed to persist refresh token.");
+  }
 
   return { accessToken, refreshToken };
 }
