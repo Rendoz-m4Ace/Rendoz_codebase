@@ -2,12 +2,17 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { Car, Shirt, Building2, Camera, Wrench, Zap, Sofa, Smartphone } from 'lucide-react';
 
 const categories = [
-  { label: 'All Use', icon: '▦' },
-  { label: 'On Feet', icon: '👟' },
-  { label: 'Super Fall', icon: '🍂' },
-  { label: 'Camera', icon: '📷' },
+  { label: 'Vehicle',     icon: Car,        listings: '20+' },
+  { label: 'Clothes',     icon: Shirt,       listings: '19' },
+  { label: 'Event Hall',  icon: Building2,   listings: '20+' },
+  { label: 'Cameras',     icon: Camera,      listings: '20+' },
+  { label: 'Tools',       icon: Wrench,      listings: '15+' },
+  { label: 'Generator',   icon: Zap,         listings: '12+' },
+  { label: 'Furniture',   icon: Sofa,        listings: '10+' },
+  { label: 'Electronics', icon: Smartphone,  listings: '20+' },
 ];
 
 const featured = [
@@ -41,28 +46,46 @@ export default function ExploreCategories() {
   return (
     <section id="explore" className="bg-white py-10 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold text-gray-800">Explore Categories</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Explore Categories</h2>
+          <button className="flex items-center gap-1 text-sm font-semibold text-orange-500 hover:underline">
+            View All <span className="text-base leading-none">›</span>
+          </button>
         </div>
 
-        <div className="flex gap-2 flex-wrap mb-6">
-          {categories.map((cat, i) => (
-            <button
-              key={cat.label}
-              type="button"
-              onClick={() => setActive(i)}
-              className={`flex items-center gap-1.5 px-4 min-h-11 rounded-full text-xs font-medium border transition-colors ${
-                active === i
-                  ? 'bg-[#1B2B6B] text-white border-[#1B2B6B]'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-orange-400 hover:text-orange-500'
-              }`}
-            >
-              <span aria-hidden="true">{cat.icon}</span>
-              {cat.label}
-            </button>
-          ))}
+        {/* Category cards — scrollable on mobile */}
+        <div className="flex gap-3 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+          {categories.map((cat, i) => {
+            const Icon = cat.icon;
+            const isActive = active === i;
+            return (
+              <button
+                key={cat.label}
+                type="button"
+                onClick={() => setActive(i)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 transition-all shrink-0 min-w-[160px] text-left ${
+                  isActive
+                    ? 'border-[#1B2B6B] bg-[#1B2B6B]/5'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  isActive ? 'bg-[#1B2B6B]' : 'bg-[#1B2B6B]/10'
+                }`}>
+                  <Icon size={18} className={isActive ? 'text-white' : 'text-[#1B2B6B]'} />
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-sm font-bold leading-tight truncate ${isActive ? 'text-[#1B2B6B]' : 'text-gray-800'}`}>
+                    {cat.label}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">{cat.listings} Listings</p>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
+        {/* Featured items grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           {featured.map((item) => (
             <article
@@ -78,9 +101,7 @@ export default function ExploreCategories() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
               <div className="absolute top-4 left-4 z-10">
-                <span
-                  className={`${item.badgeColor} text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide`}
-                >
+                <span className={`${item.badgeColor} text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide`}>
                   {item.badge}
                 </span>
               </div>

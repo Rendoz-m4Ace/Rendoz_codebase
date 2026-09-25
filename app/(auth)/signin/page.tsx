@@ -20,8 +20,13 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const { login, status, profileComplete } = useAuth();
+
   useEffect(() => {
-    if (status === 'authenticated') router.push('/');
+    if (status === 'authenticated') {
+      // Always land on the dashboard; layout will gate further if profile is incomplete
+      router.push('/dashboard');
+    }
   }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
