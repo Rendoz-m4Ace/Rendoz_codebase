@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { randomInt } from "crypto";
 import { Resend } from "resend";
 
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -16,11 +17,16 @@ function getSenderEmail(): string {
   return process.env.EMAIL_FROM ?? "noreply@rendoz.com";
 }
 
+/** Whether OTP emails are actually sent (false means codes only reach the server log in development). */
+export function isEmailDeliveryEnabled(): boolean {
+  return process.env.EMAIL_ENABLED === "true";
+}
+
 // ── Generate ─────────────────────────────────────────────────────────────────
 
 /** Returns a 6-digit numeric OTP string. */
 export function generateOtpCode(): string {
-  const code = Math.floor(100000 + Math.random() * 900000);
+  const code = randomInt(100000, 1000000);
   return String(code);
 }
 
@@ -57,8 +63,15 @@ export async function sendOtpEmail({
   code,
   purpose,
 }: SendOtpOptions): Promise<void> {
-  if (process.env.EMAIL_ENABLED !== "true") {
-    console.info("[otp] Email delivery is disabled.");
+  if (!isEmailDeliveryEnabled()) {
+    if (process.env.NODE_ENV !== "production") {
+      // Local development without an email provider: print the code so sign-up can be completed
+      console.info(`[otp] Email delivery is off. ${purpose} code for ${to}: ${code}`);
+    } else {
+      console.warn(
+        `[otp] EMAIL_ENABLED is not "true": the ${purpose} code for a user was NOT sent, so they cannot finish. Set EMAIL_ENABLED=true and RESEND_API_KEY.`,
+      );
+    }
     return;
   }
 

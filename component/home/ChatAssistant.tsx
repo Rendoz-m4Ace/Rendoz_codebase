@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, MessageCircle, Send, Sparkles, X } from 'lucide-react';
+import { MessageCircle, Send, Sparkles, X } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -15,6 +15,29 @@ const SUGGESTIONS = [
   'How does payment work?',
   'What should I do next on my account?',
 ];
+
+/** Minimum time the "thinking" bubble shows, so instant replies don't feel abrupt. */
+const MIN_THINKING_MS = 900;
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function ThinkingBubble() {
+  return (
+    <div className="flex justify-start" role="status" aria-label="Rendoz is thinking">
+      <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-gray-200 bg-white px-3.5 py-3">
+        <span className="flex items-center gap-1" aria-hidden>
+          {[0, 150, 300].map((delay) => (
+            <span
+              key={delay}
+              className="h-2 w-2 rounded-full bg-orange-400 motion-safe:animate-bounce"
+              style={{ animationDelay: `${delay}ms` }}
+            />
+          ))}
+        </span>
+        <span className="text-xs text-gray-500">Rendoz is thinking…</span>
+      </div>
+    </div>
+  );
+}
 
 const GREETING: ChatMessage = {
   role: 'assistant',
@@ -97,21 +120,27 @@ export default function ChatAssistant() {
     setMessages(next);
     setInput('');
     setSending(true);
+    // Runs alongside the request; awaiting it keeps the thinking bubble up for at least MIN_THINKING_MS
+    const minimumThinking = wait(MIN_THINKING_MS);
+    const holdThinking = () => minimumThinking;
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         // The greeting is UI-only; the API expects the conversation to start with the user
-        body: JSON.stringify({ messages: next.filter((m) => m !== GREETING).slice(-30) }),
+        // The server keeps the most recent turns and trims to a user message itself
+        body: JSON.stringify({ messages: next.filter((m) => m !== GREETING).slice(-60) }),
       });
       const data = (await res.json().catch(() => ({}))) as { reply?: string; error?: string };
+      await holdThinking();
       if (!res.ok || !data.reply) {
         setError(data.error ?? 'Something went wrong. Please try again.');
         return;
       }
       setMessages((prev) => [...prev, { role: 'assistant', content: data.reply! }]);
     } catch {
+      await holdThinking();
       setError('Network error. Check your connection and try again.');
     } finally {
       setSending(false);
@@ -188,11 +217,7 @@ export default function ChatAssistant() {
               </div>
             )}
 
-            {sending && (
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Loader2 size={14} className="animate-spin" aria-hidden /> Thinking…
-              </div>
-            )}
+            {sending && <ThinkingBubble />}
             {error && (
               <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>
             )}
