@@ -2,6 +2,7 @@ import HomeHero from '@/component/home/HomeHero';
 import ExploreCategories from '@/component/home/ExploreCategories';
 import HowRendozWorks from '@/component/home/HowRendozWorks';
 import TrendingSection from '@/component/home/TrendingSection';
+import AvailableNow from '@/component/home/AvailableNow';
 import CloseToYou from '@/component/home/CloseToYou';
 import EarnSection from '@/component/home/EarnSection';
 import HomeFaq from '@/component/home/HomeFaq';
@@ -16,6 +17,7 @@ export default function HomePage() {
         <HomeHero />
         <ExploreCategories />
         <HowRendozWorks />
+        <AvailableNow />
         <TrendingSection />
         <CloseToYou />
         <EarnSection />
