@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS users (
   nin_submitted_at TIMESTAMPTZ,
   profile_photo   TEXT,                        -- URL to storage
   location        TEXT,                        -- e.g. "Ikeja, Lagos"
+  profile         JSONB NOT NULL DEFAULT '{}'::jsonb, -- owner profile details (see component/dashboard/profile/types.ts)
+  profile_completed BOOLEAN NOT NULL DEFAULT FALSE,  -- owner setup finished; unlocks listing
   is_active       BOOLEAN NOT NULL DEFAULT TRUE,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()

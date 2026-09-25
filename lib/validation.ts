@@ -17,6 +17,15 @@ export function passwordStrength(password: string): number {
   return PASSWORD_RULES.filter((rule) => rule.test(password)).length;
 }
 
+/** Mirrors the server rules in /api/auth/register and /api/auth/reset-password. */
+export function passwordServerError(password: string): string | null {
+  if (password.length < 8) return 'Password must be at least 8 characters.';
+  if (password.length > 72) return 'Password is too long.';
+  if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.';
+  if (!/\d/.test(password)) return 'Password must contain at least one number.';
+  return null;
+}
+
 export function normalizeNin(value: string): string {
   return value.replace(/\D/g, '').slice(0, 11);
 }
@@ -38,6 +47,12 @@ export function normalizePhone(value: string): string {
 export function isValidNgPhone(value: string): boolean {
   const compact = normalizePhone(value).replace(/^00/, '+');
   return PHONE_NG_REGEX.test(compact);
+}
+
+/** Converts +234 / 234 numbers to the local 0XXXXXXXXXX format the API stores. */
+export function toLocalNgPhone(value: string): string {
+  const compact = normalizePhone(value).replace(/^00/, '+');
+  return compact.replace(/^\+?234/, '0');
 }
 
 export function isValidDob(value: string): boolean {

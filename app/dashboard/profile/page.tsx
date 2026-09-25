@@ -206,7 +206,13 @@ export default function DashboardProfilePage() {
   const [fullName, setFullName] = useState(user?.name ?? 'Amara Okafor');
   const email = user?.email ?? 'amara.okafor@email.com';
 
-  const [profile, setProfile] = useState<ProfileData>(defaultProfileData);
+  // Start from what's saved on the account (the layout only renders once the user is loaded)
+  const [profile, setProfile] = useState<ProfileData>(() => ({
+    ...defaultProfileData,
+    phone: user?.phone ?? '',
+    photoUrl: user?.avatar ?? null,
+    ...user?.profile,
+  }));
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
 
   const patch = (p: Partial<ProfileData>) =>

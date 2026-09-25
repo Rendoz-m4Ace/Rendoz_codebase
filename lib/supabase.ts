@@ -19,6 +19,9 @@ export interface DbUser {
   nin_submitted_at: string | null;
   profile_photo: string | null;
   location: string | null;
+  /** Owner profile details; shape matches ProfileData in component/dashboard/profile/types.ts */
+  profile: Record<string, unknown> | null;
+  profile_completed: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;

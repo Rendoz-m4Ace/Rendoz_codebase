@@ -9,7 +9,6 @@ import { verifyAccessToken } from "@/lib/jwt";
  */
 const PROTECTED_ROUTES: string[] = [
   "/api/auth/me",
-  "/api/auth/logout",
   "/api/auth/become-owner",
   // Future protected API routes go here, e.g.:
   // "/api/listings",
@@ -96,7 +95,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/api/auth/me",
-    "/api/auth/logout",
     "/api/auth/verify-email",
     "/api/auth/resend-otp",
     "/api/auth/become-owner",

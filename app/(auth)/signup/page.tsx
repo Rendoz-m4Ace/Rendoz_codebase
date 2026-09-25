@@ -5,38 +5,66 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   Eye,
   EyeOff,
   Lock,
   Mail,
+  Phone,
+  ShoppingBag,
+  Store,
 } from 'lucide-react';
 import AuthShell from '@/component/auth/AuthShell';
 import OtpInput from '@/component/auth/OtpInput';
 import PrimaryButton from '@/component/auth/PrimaryButton';
 import GoogleButton from '@/component/auth/GoogleButton';
 import { useCountdown } from '@/component/auth/useCountdown';
-import { useAuth } from '@/context/AuthContext';
+import {
+  SIGNUP_STORAGE_KEY,
+  type SignupDraft,
+  type SignupStep,
+} from '@/component/auth/signupDraft';
+import { useAuth, type AccountRole } from '@/context/AuthContext';
 import {
   isValidEmail,
+  isValidNgPhone,
+  passwordServerError,
   passwordStrength,
+  toLocalNgPhone,
 } from '@/lib/validation';
-import {
-  mockCreateAccount,
-  mockGoogleAuth,
-  mockResendOtp,
-  mockVerifyEmailOtp,
-} from '@/lib/mock-auth';
+import { authApi } from '@/lib/api-client';
+import { mockGoogleAuth } from '@/lib/mock-auth';
 
-type SignupStep = 'details' | 'email-otp';
+const STORAGE_KEY = SIGNUP_STORAGE_KEY;
 
-const STORAGE_KEY = 'rendoz_signup_flow';
+const ROLE_OPTIONS: {
+  role: AccountRole;
+  icon: typeof ShoppingBag;
+  title: string;
+  description: string;
+}[] = [
+  {
+    role: 'renter',
+    icon: ShoppingBag,
+    title: 'I want to rent',
+    description: 'Find and book items from verified owners for as long as you need them.',
+  },
+  {
+    role: 'owner',
+    icon: Store,
+    title: 'I want to list my items',
+    description: 'Earn from things you own by renting them out to verified renters.',
+  },
+];
 
-interface SignupDraft {
-  step: SignupStep;
-  firstName: string;
-  lastName: string;
-  email: string;
+const ROLE_COPY: Record<AccountRole, { heading: string; cta: string }> = {
+  renter: { heading: 'Create your renter account', cta: 'Create Account' },
+  owner: { heading: 'Create your owner account', cta: 'Create Owner Account' },
+};
+
+function isAccountRole(value: unknown): value is AccountRole {
+  return value === 'renter' || value === 'owner';
 }
 
 function PasswordStrengthBar({ password }: { password: string }) {
@@ -61,18 +89,21 @@ function PasswordStrengthBar({ password }: { password: string }) {
 }
 
 function stepLabel(step: SignupStep): string {
-  if (step === 'details') return 'Step 1 of 2';
-  return 'Step 2 of 2';
+  if (step === 'role') return 'Step 1 of 3';
+  if (step === 'details') return 'Step 2 of 3';
+  return 'Step 3 of 3';
 }
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { login, status } = useAuth();
+  const { user, setSessionUser, status } = useAuth();
 
-  const [step, setStep] = useState<SignupStep>('details');
+  const [step, setStep] = useState<SignupStep>('role');
+  const [role, setRole] = useState<AccountRole | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -87,12 +118,20 @@ export default function SignUpPage() {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
+      // Links such as "Start listing" preselect a role with ?role=owner
+      const roleParam = new URLSearchParams(window.location.search).get('role');
       if (raw) {
         const draft = JSON.parse(raw) as SignupDraft;
-        setStep(draft.step);
+        const draftRole = isAccountRole(draft.role) ? draft.role : null;
+        setRole(draftRole);
+        setStep(draftRole ? draft.step : 'role');
         setFirstName(draft.firstName);
         setLastName(draft.lastName);
         setEmail(draft.email);
+        setPhone(draft.phone ?? '');
+      } else if (isAccountRole(roleParam)) {
+        setRole(roleParam);
+        setStep('details');
       }
     } catch {
       /* ignore */
@@ -103,17 +142,24 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (!hydrated) return;
-    const draft: SignupDraft = { step, firstName, lastName, email };
+    const draft: SignupDraft = { step, role, firstName, lastName, email, phone };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-  }, [hydrated, step, firstName, lastName, email]);
+  }, [hydrated, step, role, firstName, lastName, email, phone]);
 
   useEffect(() => {
-    if (status === 'authenticated') router.push('/');
-  }, [status, router]);
+    if (status !== 'authenticated') return;
+    // Owners land on their profile so they can finish owner setup before listing
+    router.push(user?.role === 'owner' ? '/dashboard/profile' : '/');
+  }, [status, user, router]);
 
   const goTo = (next: SignupStep) => {
     setError('');
     setStep(next);
+  };
+
+  const chooseRole = (next: AccountRole) => {
+    setRole(next);
+    goTo('details');
   };
 
   const handleGoogle = async () => {
@@ -125,16 +171,26 @@ export default function SignUpPage() {
   const handleDetails = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!role) return goTo('role');
     if (!firstName.trim()) return setError('Please enter your first name.');
     if (!lastName.trim()) return setError('Please enter your last name.');
     if (!isValidEmail(email)) return setError('Please enter a valid email address.');
-    if (passwordStrength(password) < 3) return setError('Please choose a stronger password.');
+    if (!isValidNgPhone(phone)) return setError('Enter a valid Nigerian phone number (e.g. 08012345678).');
+    const passwordError = passwordServerError(password);
+    if (passwordError) return setError(passwordError);
     if (password !== confirmPassword) return setError('Passwords do not match.');
     if (!agreed) return setError('Please agree to the Terms of Service and Privacy Policy.');
     setLoading(true);
-    const result = await mockCreateAccount({ firstName, lastName, email, password });
+    const result = await authApi.register({
+      full_name: `${firstName.trim()} ${lastName.trim()}`,
+      email: email.trim(),
+      phone: toLocalNgPhone(phone),
+      password,
+    });
     setLoading(false);
-    if (!result.success) return setError(result.message);
+    if (!result.ok) return setError(result.error);
+    setPassword('');
+    setConfirmPassword('');
     emailCountdown.reset();
     goTo('email-otp');
   };
@@ -145,11 +201,29 @@ export default function SignUpPage() {
     const code = emailOtp.join('');
     if (code.length < 6) return setError('Please enter the full 6-digit code.');
     setLoading(true);
-    const result = await mockVerifyEmailOtp(email, code);
+    const verified = await authApi.verifyEmail(code);
+    if (!verified.ok) {
+      setLoading(false);
+      return setError(verified.error);
+    }
+    let sessionUser = verified.data.user;
+    if (role === 'owner' && !sessionUser.role.includes('owner')) {
+      // Owner role needs a verified email, so it is granted right after verification
+      const owner = await authApi.becomeOwner();
+      if (owner.ok) sessionUser = owner.data.user;
+      else setError(`Your email is verified, but we couldn't enable listing: ${owner.error}`);
+    }
     setLoading(false);
-    if (!result.success) return setError(result.message);
     sessionStorage.removeItem(STORAGE_KEY);
-    await login(email, `${firstName} ${lastName}`);
+    setSessionUser(sessionUser);
+  };
+
+  const handleResendEmailOtp = async () => {
+    setError('');
+    const result = await authApi.resendEmailOtp();
+    if (!result.ok) return setError(result.error);
+    emailCountdown.reset();
+    setEmailOtp(Array(6).fill(''));
   };
 
   return (
@@ -162,15 +236,66 @@ export default function SignUpPage() {
         </p>
       )}
 
-      {step === 'details' && (
+      {step === 'role' && (
         <>
-          <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900">How will you use Rendoz?</h2>
           <p className="text-sm text-gray-500 mt-1 mb-6">
             Already have an account?{' '}
             <Link href="/signin" className="text-blue-600 font-semibold hover:underline">
               Sign in
             </Link>
           </p>
+          <div className="flex flex-col gap-3" role="radiogroup" aria-label="Account type">
+            {ROLE_OPTIONS.map(({ role: option, icon: Icon, title, description }) => {
+              const selected = role === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => chooseRole(option)}
+                  className={`w-full flex items-start gap-4 text-left border rounded-xl px-4 py-4 transition-colors ${
+                    selected ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-400'
+                  }`}
+                >
+                  <span className="w-11 h-11 rounded-lg bg-orange-500 flex items-center justify-center shrink-0">
+                    <Icon size={20} className="text-white" />
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-sm font-bold text-gray-900">{title}</span>
+                    <span className="block text-sm text-gray-500 mt-0.5 leading-relaxed">{description}</span>
+                  </span>
+                  <ArrowRight size={18} className="text-gray-400 self-center shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-gray-400 mt-4">
+            You can rent and list with the same account. This just sets where you start.
+          </p>
+        </>
+      )}
+
+      {step === 'details' && role && (
+        <>
+          <h2 className="text-3xl font-extrabold text-gray-900">{ROLE_COPY[role].heading}</h2>
+          <p className="text-sm text-gray-500 mt-1 mb-6">
+            Not what you wanted?{' '}
+            <button
+              type="button"
+              onClick={() => goTo('role')}
+              className="text-blue-600 font-semibold hover:underline"
+            >
+              Change account type
+            </button>
+          </p>
+          {role === 'owner' && (
+            <p className="text-sm text-gray-600 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 mb-4">
+              After verifying your email, you&apos;ll finish your owner profile (phone, location, NIN
+              and payout details) before you can publish a listing.
+            </p>
+          )}
           <form onSubmit={handleDetails} noValidate className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
@@ -201,6 +326,21 @@ export default function SignUpPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="example@gmail.com"
+                  className="w-full min-h-12 pl-10 pr-4 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </span>
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
+              Phone number
+              <span className="relative font-normal">
+                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="08012345678"
                   className="w-full min-h-12 pl-10 pr-4 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </span>
@@ -273,7 +413,7 @@ export default function SignUpPage() {
                 </Link>
               </span>
             </label>
-            <PrimaryButton loading={loading}>Create Account</PrimaryButton>
+            <PrimaryButton loading={loading}>{ROLE_COPY[role].cta}</PrimaryButton>
             <GoogleButton onClick={handleGoogle} disabled={loading} />
           </form>
         </>
@@ -286,7 +426,7 @@ export default function SignUpPage() {
           </div>
           <h2 className="text-2xl font-extrabold text-gray-900">Check your email</h2>
           <p className="text-sm text-gray-500 mt-2 max-w-xs">
-            We sent a 6-digit verification code to your email
+            We sent a 6-digit verification code to {email || 'your email'}
           </p>
           <form onSubmit={handleEmailOtp} className="w-full mt-8 flex flex-col gap-5">
             <OtpInput value={emailOtp} onChange={setEmailOtp} disabled={loading} />
@@ -300,11 +440,7 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   className="text-blue-600 font-semibold min-h-11"
-                  onClick={async () => {
-                    await mockResendOtp('email', email);
-                    emailCountdown.reset();
-                    setEmailOtp(Array(6).fill(''));
-                  }}
+                  onClick={handleResendEmailOtp}
                 >
                   Resend code
                 </button>
@@ -317,13 +453,13 @@ export default function SignUpPage() {
               </p>
             </div>
           </form>
-          <button
-            type="button"
-            onClick={() => goTo('details')}
+          <Link
+            href="/signin"
+            onClick={() => sessionStorage.removeItem(STORAGE_KEY)}
             className="flex items-center gap-1.5 text-sm text-gray-500 mt-6 min-h-11"
           >
-            <ArrowLeft size={15} /> Back to sign up
-          </button>
+            <ArrowLeft size={15} /> Verify later and sign in
+          </Link>
         </div>
       )}
     </AuthShell>
