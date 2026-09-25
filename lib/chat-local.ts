@@ -5,7 +5,8 @@
  * unavailable, so the chat always answers greetings, common Rendoz questions
  * and "where do I…" requests with a link.
  */
-import { CATEGORIES, FAQS, SERVICE_AREAS, SITE_PAGES, searchListings, type SitePageKey } from "@/lib/catalog";
+import { CATEGORIES, FAQS, SERVICE_AREAS, SITE_PAGES, type SitePageKey } from "@/lib/catalog";
+import { searchAllListings, type ListingSearchResult } from "@/lib/public-listings";
 import { runChatTool } from "@/lib/chat-tools";
 
 const naira = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 });
@@ -16,14 +17,18 @@ const faq = (question: string) => FAQS.find((f) => f.question === question)?.ans
 /** True if any of the patterns matches the message. */
 const has = (text: string, ...patterns: RegExp[]) => patterns.some((p) => p.test(text));
 
-// Words that point at an item someone wants to rent, mapped to a search keyword
+// Words that point at an item someone wants to rent, mapped to search words (any one may match)
 const ITEM_WORDS: [RegExp, string][] = [
-  [/\bcamera|photograph|canon|dslr\b/, "camera"],
-  [/\bcar|vehicle|bmw|drive\b/, "bmw"],
-  [/\bgenerator|power|electricity|light\b/, "generator"],
-  [/\btool|drill|equipment\b/, "tools"],
-  [/\btent|canopy|party|event|wedding\b/, "tent"],
+  [/\bcamera|photograph|canon|dslr\b/, "camera photo canon"],
+  [/\bcar|vehicle|bmw|drive\b/, "car vehicle bmw"],
+  [/\bgenerator|power|electricity|light\b/, "generator power"],
+  [/\btool|drill|equipment\b/, "tool drill equipment"],
+  [/\btent|canopy|party|event|wedding\b/, "tent canopy event"],
 ];
+
+const listingLine = (l: ListingSearchResult) =>
+  `- **${l.title}** — ${l.pricePerDay ? `${naira.format(l.pricePerDay)}/day` : "price on request"}` +
+  `${l.location ? ` in ${l.location}` : ""}${l.rating ? ` (★ ${l.rating})` : ""}${l.live ? " · available now" : ""}`;
 
 async function accountReply(): Promise<string> {
   const account = JSON.parse(await runChatTool("get_my_account", {})) as {
@@ -42,7 +47,7 @@ async function accountReply(): Promise<string> {
   ].join("\n");
 }
 
-function listingsReply(text: string): string | null {
+async function listingsReply(text: string): Promise<string | null> {
   const keyword = ITEM_WORDS.find(([pattern]) => pattern.test(text))?.[1];
   const maxPrice = /(?:under|below|less than|max(?:imum)?|budget(?: of)?)\s*₦?\s*([\d,]+)\s*(k)?/.exec(text);
   const location = ["lekki", "ikeja", "victoria island", "lagos island", "yaba"].find((l) => text.includes(l));
@@ -54,7 +59,7 @@ function listingsReply(text: string): string | null {
   // "Do you have boats?" names an item we don't carry: nothing to filter on, so no matches
   const results =
     keyword || priceLimit !== undefined || location
-      ? searchListings({ query: keyword, location, maxPricePerDay: priceLimit })
+      ? await searchAllListings({ query: keyword, location, maxPricePerDay: priceLimit })
       : [];
 
   if (results.length === 0) {
@@ -62,10 +67,7 @@ function listingsReply(text: string): string | null {
       .map((c) => c.name)
       .join(", ")}. New items are added as owners join. Want to ${link("sign_up")} to be first to know?`;
   }
-  const lines = results.map(
-    (l) => `- **${l.title}** — ${naira.format(l.pricePerDay)}/day in ${l.location} (★ ${l.rating})`,
-  );
-  return [`Here's what I found:`, ...lines, `${link("sign_up")} or ${link("sign_in")} to book.`].join("\n");
+  return [`Here's what I found:`, ...results.map(listingLine), `${link("sign_up")} or ${link("sign_in")} to book.`].join("\n");
 }
 
 /** Returns a reply for the latest user message. */
@@ -163,16 +165,14 @@ export async function localReply(message: string): Promise<string> {
 
   // ── Items to rent ──
   if (has(text, /^(more|show( me)? more|see more|what else|anything else|show (me )?(all|everything)|all listings)\b/)) {
-    const lines = searchListings({}).map(
-      (l) => `- **${l.title}** — ${naira.format(l.pricePerDay)}/day in ${l.location} (★ ${l.rating})`,
-    );
+    const lines = (await searchAllListings({})).map(listingLine);
     return [
       "Here's everything listed right now:",
       ...lines,
       `More items are added as owners join. Tell me what you need, or ${link("sign_up")} to book.`,
     ].join("\n");
   }
-  const listings = listingsReply(text);
+  const listings = await listingsReply(text);
   if (listings) return listings;
 
   if (has(text, /\b(help|support|contact|human|agent)\b/)) {

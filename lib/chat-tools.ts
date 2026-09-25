@@ -5,12 +5,12 @@ import {
   FAQS,
   SERVICE_AREAS,
   SITE_PAGES,
-  searchListings,
   type SitePageKey,
 } from "@/lib/catalog";
 import { getAccessTokenFromCookies } from "@/lib/auth-helpers";
 import { verifyAccessToken } from "@/lib/jwt";
 import { getSupabase, type DbUser } from "@/lib/supabase";
+import { searchAllListings } from "@/lib/public-listings";
 
 // ── Tool definitions (what Claude sees) ──────────────────────────────────────
 
@@ -116,16 +116,19 @@ export async function runChatTool(name: string, input: unknown): Promise<string>
   switch (name) {
     case "search_listings": {
       const args = SearchInput.parse(input);
-      const results = searchListings({
+      const results = await searchAllListings({
         query: args.query,
         category: args.category,
         location: args.location,
         maxPricePerDay: args.max_price_per_day,
       });
       return JSON.stringify({
-        note: "Sample listings shown on the homepage; the full catalogue is coming soon.",
+        note: "live=true are real listings from verified owners; live=false are homepage samples. The full catalogue is growing.",
         count: results.length,
-        results: results.map((l) => ({ ...l, price: `${naira.format(l.pricePerDay)}/day` })),
+        results: results.map((l) => ({
+          ...l,
+          price: l.pricePerDay ? `${naira.format(l.pricePerDay)}/day` : "price on request",
+        })),
       });
     }
     case "list_categories":
