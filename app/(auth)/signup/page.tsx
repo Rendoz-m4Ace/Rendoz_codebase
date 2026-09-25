@@ -113,6 +113,8 @@ export default function SignUpPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  // False when the server couldn't email the code (email delivery not set up)
+  const [codeEmailed, setCodeEmailed] = useState(true);
   const emailCountdown = useCountdown(59);
 
   useEffect(() => {
@@ -189,6 +191,7 @@ export default function SignUpPage() {
     });
     setLoading(false);
     if (!result.ok) return setError(result.error);
+    setCodeEmailed(result.data.verification_email === 'sent');
     setPassword('');
     setConfirmPassword('');
     emailCountdown.reset();
@@ -446,12 +449,29 @@ export default function SignUpPage() {
                 </button>
               )}
             </p>
-            <div className="border border-red-300 rounded-xl px-4 py-3 text-left">
-              <p className="text-sm font-semibold text-red-500">Can&apos;t Find The Email?</p>
-              <p className="text-sm text-red-500 mt-0.5">
-                Check Your Spam Or Junk Folder. The Code Expires In 10 Minutes.
-              </p>
-            </div>
+            {codeEmailed ? (
+              <div className="border border-red-300 rounded-xl px-4 py-3 text-left">
+                <p className="text-sm font-semibold text-red-500">Can&apos;t Find The Email?</p>
+                <p className="text-sm text-red-500 mt-0.5">
+                  Check Your Spam Or Junk Folder. The Code Expires In 10 Minutes.
+                </p>
+              </div>
+            ) : process.env.NODE_ENV !== 'production' ? (
+              <div className="border border-amber-300 bg-amber-50 rounded-xl px-4 py-3 text-left">
+                <p className="text-sm font-semibold text-amber-800">Email sending is off (development)</p>
+                <p className="text-sm text-amber-800 mt-0.5">
+                  Your 6-digit code is printed in the terminal running <code>npm run dev</code>, on a line
+                  starting with <code>[otp]</code>.
+                </p>
+              </div>
+            ) : (
+              <div className="border border-amber-300 bg-amber-50 rounded-xl px-4 py-3 text-left">
+                <p className="text-sm font-semibold text-amber-800">We couldn&apos;t send your code</p>
+                <p className="text-sm text-amber-800 mt-0.5">
+                  Please try &quot;Resend code&quot; in a minute. If it still doesn&apos;t arrive, contact Rendoz support.
+                </p>
+              </div>
+            )}
           </form>
           <Link
             href="/signin"

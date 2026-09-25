@@ -56,7 +56,7 @@ type MessageResponse = { message: string };
 
 export const authApi = {
   register: (input: { full_name: string; email: string; phone: string; password: string }) =>
-    post<UserResponse>('/api/auth/register', input),
+    post<UserResponse & { verification_email: 'sent' | 'not_sent' }>('/api/auth/register', input),
 
   login: (identifier: string, password: string) =>
     post<UserResponse>('/api/auth/login', { identifier, password }),

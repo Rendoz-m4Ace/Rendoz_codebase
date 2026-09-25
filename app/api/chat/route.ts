@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { CHAT_TOOLS, runChatTool } from "@/lib/chat-tools";
+import { localReply } from "@/lib/chat-local";
 import { checkRateLimit } from "@/lib/db";
 
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -30,11 +31,18 @@ const ChatRequest = z.object({
       }),
     )
     .min(1)
-    .max(30)
-    .refine((m) => m[0].role === "user" && m[m.length - 1].role === "user", {
-      message: "Conversation must start and end with a user message.",
+    .max(100)
+    .refine((m) => m[m.length - 1].role === "user", {
+      message: "The last message must be from the user.",
     }),
 });
+
+/** Keeps the recent part of a long chat, starting on a user turn as the API requires. */
+function recentHistory<T extends { role: "user" | "assistant" }>(messages: T[], limit = 30): T[] {
+  const recent = messages.slice(-limit);
+  const firstUser = recent.findIndex((m) => m.role === "user");
+  return recent.slice(firstUser);
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -61,13 +69,6 @@ function getClient(): Anthropic {
 // ── Handler ──────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json(
-      { error: "The assistant isn't configured yet. Please check the FAQ below." },
-      { status: 503 },
-    );
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -79,14 +80,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 422 });
   }
 
-  if (!(await withinRateLimit(req))) {
-    return NextResponse.json(
-      { error: "You've sent a lot of messages. Please try again in a little while." },
-      { status: 429 },
-    );
-  }
+  const history = recentHistory(parsed.data.messages);
+  const latest = history[history.length - 1].content;
+  const builtIn = async () => NextResponse.json({ reply: await localReply(latest) });
 
-  const messages: Anthropic.Beta.BetaMessageParam[] = parsed.data.messages.map((m) => ({
+  // No Claude key configured: answer with the built-in replies
+  if (!process.env.ANTHROPIC_API_KEY) return builtIn();
+
+  // The limit caps Claude spend; past it (or with no Redis), fall back to the free built-in replies
+  if (!(await withinRateLimit(req))) return builtIn();
+
+  const messages: Anthropic.Beta.BetaMessageParam[] = history.map((m) => ({
     role: m.role,
     content: m.content,
   }));
@@ -142,18 +146,18 @@ export async function POST(req: NextRequest) {
       messages.push({ role: "user", content: results });
     }
   } catch (err) {
+    // Log why Claude failed, then still answer with the built-in replies
     if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: "The assistant is busy right now. Please try again shortly." }, { status: 503 });
-    }
-    if (err instanceof Anthropic.AuthenticationError) {
+      console.error("[chat] Anthropic rate limit hit; using built-in replies.");
+    } else if (err instanceof Anthropic.AuthenticationError) {
       console.error("[chat] Anthropic authentication failed; check ANTHROPIC_API_KEY.");
     } else if (err instanceof Anthropic.APIError) {
       console.error(`[chat] Anthropic API error ${err.status}:`, err.message);
     } else {
       console.error("[chat] Unexpected error:", err);
     }
-    return NextResponse.json({ error: "The assistant is unavailable right now. Please try again." }, { status: 502 });
+    return builtIn();
   }
 
-  return NextResponse.json({ error: "No reply." }, { status: 502 });
+  return builtIn();
 }

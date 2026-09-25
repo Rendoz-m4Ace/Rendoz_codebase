@@ -13,6 +13,7 @@ import {
   hashOtpCode,
   otpExpiresAt,
   sendOtpEmail,
+  isEmailDeliveryEnabled,
 } from "@/lib/otp";
 
 // ── Validation schema ────────────────────────────────────────────────────────
@@ -141,15 +142,23 @@ export async function POST(req: NextRequest) {
       expires_at: expiresAt.toISOString(),
     });
 
+    // Awaited so a serverless function isn't frozen before the email goes out.
+    // A failed send doesn't fail sign-up: the user can request a new code.
+    let codeSent = false;
     if (otpError) {
       console.error("[register] OTP insert error:", otpError);
     } else {
-      sendOtpEmail({
-        to: user.email,
-        fullName: user.full_name,
-        code: plainOtp,
-        purpose: "email_verification",
-      }).catch((err) => console.error("[register] OTP email error:", err));
+      try {
+        await sendOtpEmail({
+          to: user.email,
+          fullName: user.full_name,
+          code: plainOtp,
+          purpose: "email_verification",
+        });
+        codeSent = isEmailDeliveryEnabled();
+      } catch (err) {
+        console.error("[register] OTP email error:", err);
+      }
     }
 
     // Issue token pair and set cookies
@@ -159,6 +168,8 @@ export async function POST(req: NextRequest) {
       {
         message: "Account created successfully. Please verify your email.",
         user: sanitizeUser(user),
+        // Lets the sign-up page explain where the code is when email isn't set up
+        verification_email: codeSent ? "sent" : "not_sent",
       },
       { status: 201 }
     );
