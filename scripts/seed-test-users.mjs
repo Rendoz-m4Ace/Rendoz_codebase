@@ -1,4 +1,4 @@
-// Seeds two test accounts (renter and owner) into Supabase, both with a completed owner profile.
+// Seeds two test accounts into Supabase: a renter (rent only) and an owner with a completed owner profile.
 //
 // Usage:  npm run seed:test-users
 // Reads SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from .env.local.
@@ -11,7 +11,7 @@ import { createClient } from "@supabase/supabase-js";
 const TEST_PASSWORD = "RendozTest123";
 const BCRYPT_ROUNDS = 12; // matches lib/auth-helpers.ts
 
-// A fully completed owner profile, so both accounts can list and view everything.
+// A fully completed owner profile, so the owner account can list straight away.
 // Shape matches ProfileData in component/dashboard/profile/types.ts.
 function completedProfile({ phone, photoUrl, city, street, bank, accountNumber, accountName }) {
   return {
@@ -34,8 +34,30 @@ function completedProfile({ phone, photoUrl, city, street, bank, accountNumber, 
   };
 }
 
-function testUser({ full_name, email, phone, nin, city, street, bank, accountNumber }) {
-  const photoUrl = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(full_name)}`;
+const avatar = (name) => `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}`;
+
+/** A verified renter: can browse and rent, but has no owner role, so no listing or owner dashboard. */
+function renterUser({ full_name, email, phone, city }) {
+  return {
+    full_name,
+    email,
+    phone,
+    role: ["renter"],
+    is_email_verified: true,
+    verification_status: "verified",
+    // Cleared explicitly so re-running the seed removes any owner data left from earlier seeds
+    nin: null,
+    nin_submitted_at: null,
+    profile_photo: avatar(full_name),
+    location: `${city}, Lagos`,
+    profile: {},
+    profile_completed: false,
+  };
+}
+
+/** An owner with a completed owner profile: can create listings (auto-approved, see lib/listings.ts). */
+function ownerUser({ full_name, email, phone, nin, city, street, bank, accountNumber }) {
+  const photoUrl = avatar(full_name);
   return {
     full_name,
     email,
@@ -54,17 +76,13 @@ function testUser({ full_name, email, phone, nin, city, street, bank, accountNum
 }
 
 const TEST_USERS = [
-  testUser({
+  renterUser({
     full_name: "Test Renter",
     email: "renter.test@rendoz.dev",
     phone: "08000000001",
-    nin: "12345678900",
     city: "Yaba",
-    street: "1 Test Street",
-    bank: "Test Bank",
-    accountNumber: "0000000001",
   }),
-  testUser({
+  ownerUser({
     full_name: "Test Owner",
     email: "owner.test@rendoz.dev",
     phone: "08000000002",

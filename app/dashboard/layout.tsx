@@ -39,10 +39,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Redirect if unauthenticated
+  // Redirect if unauthenticated; this is the owner dashboard, so renters go back to browsing
   useEffect(() => {
     if (status === 'unauthenticated') router.replace('/signin');
-  }, [status, router]);
+    else if (status === 'authenticated' && user?.role !== 'owner') router.replace('/');
+  }, [status, user, router]);
 
   // If user tries to access listing pages without a complete profile, redirect to profile
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!user) return null;
+  if (!user || user.role !== 'owner') return null;
 
   const initials = getInitials(user.name);
   const showProfileBanner = !profileComplete && !PROFILE_EXEMPT.some((p) => pathname.startsWith(p));

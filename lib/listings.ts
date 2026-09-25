@@ -45,8 +45,8 @@ export const LISTING_PHOTO_BUCKET = "listing-photos";
 export const MIN_LISTING_PHOTOS = 3;
 export const MAX_LISTING_PHOTOS = 5;
 
-/** Seeded test accounts; override with a comma-separated LISTING_AUTO_APPROVE_EMAILS. */
-const DEFAULT_AUTO_APPROVE = ["owner.test@rendoz.dev", "renter.test@rendoz.dev"];
+/** The seeded test owner; override with a comma-separated LISTING_AUTO_APPROVE_EMAILS. */
+const DEFAULT_AUTO_APPROVE = ["owner.test@rendoz.dev"];
 
 export function isAutoApproved(email: string): boolean {
   const configured = process.env.LISTING_AUTO_APPROVE_EMAILS;
