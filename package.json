@@ -10,6 +10,7 @@
     "seed:test-users": "node --env-file=.env.local scripts/seed-test-users.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@supabase/supabase-js": "2.49.4",
     "@upstash/redis": "^1.38.4",
     "bcryptjs": "^3.0.3",

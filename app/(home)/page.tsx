@@ -7,6 +7,7 @@ import EarnSection from '@/component/home/EarnSection';
 import HomeFaq from '@/component/home/HomeFaq';
 import Testimonials from '@/component/home/Testimonials';
 import HomeFooter from '@/component/home/HomeFooter';
+import ChatAssistant from '@/component/home/ChatAssistant';
 
 export default function HomePage() {
   return (
@@ -22,6 +23,7 @@ export default function HomePage() {
         <Testimonials />
       </main>
       <HomeFooter />
+      <ChatAssistant />
     </>
   );
 }

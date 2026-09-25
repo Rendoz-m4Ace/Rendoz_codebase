@@ -8,6 +8,7 @@ import {
   AlertCircle, TrendingUp, Settings,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import OwnerAnalytics from '@/component/dashboard/analytics/OwnerAnalytics';
 
 /* ═══════════════════════════════════════════════════════════
    STAT CARD
@@ -323,6 +324,9 @@ export default function DashboardOverviewPage() {
         <StatCard icon={TrendingUp}   value={0} label="Current Rentals"  iconBg="bg-gray-100" />
         <StatCard icon={Wallet}       value="₦0" label="Earnings"        iconBg="bg-gray-100" />
       </div>
+
+      {/* ── ANALYTICS ── */}
+      {user && <OwnerAnalytics userId={user.id} />}
 
       {/* ── NO UPCOMING + NO ACTIVITY — side by side ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
