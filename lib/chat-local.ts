@@ -151,6 +151,16 @@ export async function localReply(message: string): Promise<string> {
     return `${faq("What is Rendoz?")} Own it? Rent it out. Need it? Rent it.`;
   }
 
+  // ── Newcomer walkthrough ──
+  if (
+    has(
+      text,
+      /\b(walk me through|walkthrough|walk through|guide me|show me around|tour|new here|first time|new to (this|rendoz)|i (don'?t|do not) (know|understand)|confus\w*|lost|how (do i|to|does one) use|explain (this|the|how)|what (is|'s) this (site|website|app|platform|place))\b/,
+    )
+  ) {
+    return WALKTHROUGH;
+  }
+
   // ── Items to rent ──
   if (has(text, /^(more|show( me)? more|see more|what else|anything else|show (me )?(all|everything)|all listings)\b/)) {
     const lines = searchListings({}).map(
@@ -171,10 +181,22 @@ export async function localReply(message: string): Promise<string> {
 
   // ── Fallback ──
   return [
-    "I'm not sure I understood that. I can help with things like:",
+    "Sorry, I didn't quite catch that. New to Rendoz? Just say **\"walk me through\"** for a quick tour. You can also ask things like:",
     "- \"Find a generator in Lekki\"",
     "- \"How does payment work?\"",
     "- \"How do I list my camera?\"",
     `Or browse the ${link("faq")}.`,
   ].join("\n");
 }
+
+const WALKTHROUGH = [
+  "Happy to walk you through! 👋 **Rendoz** is a rental marketplace in Nigeria: rent things you need for a few days, or earn money renting out things you own.",
+  "**If you want to rent something:**",
+  "- Tell me what you need (e.g. \"find a camera in Lekki\") or browse the categories on the homepage",
+  "- Pick your dates and pay securely on Rendoz; the owner is paid after the rental",
+  "- Pick it up, use it, and return it. Any security deposit is released when it's returned as agreed",
+  "**If you want to earn:**",
+  "- Sign up as an owner and verify your identity (phone, NIN, payout details)",
+  "- Add photos, set a daily price and your available dates, then publish",
+  `Where would you like to start? ${link("sign_up")} · ${link("sign_up_as_owner")} · ${link("how_it_works")}`,
+].join("\n");

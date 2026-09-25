@@ -103,8 +103,9 @@ export default function HomeHero() {
             </div>
           </form>
 
-          <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-white/60">
-            <span className="font-medium text-white/80">Popular:</span>
+          {/* items-center keeps the label level with the 44px-tall tag buttons */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-2 text-xs text-white/60">
+            <span className="font-medium text-white/80 leading-none">Popular:</span>
             {popular.map((tag) => (
               <button
                 key={tag}

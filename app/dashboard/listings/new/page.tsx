@@ -6,6 +6,8 @@ import {
   X, ChevronDown, Upload, Plus, Trash2, CheckCircle2, Info,
   ArrowLeft, Camera, Video, FileText, Image as ImageIcon,
 } from 'lucide-react';
+import { listingsApi, type NewListingInput } from '@/lib/api-client';
+import type { ListingStatus } from '@/lib/listings';
 
 /* ═══════════════════════════════════════════════════════
    STATIC DATA
@@ -42,7 +44,7 @@ interface ListingDraft {
   description: string; brand: string; model: string;
   condition: Condition | ''; size: string; quantity: string;
   // Step 2
-  photos: string[];   // object-URLs
+  photos: string[];   // public URLs of uploaded photos
   videoFile: string | null;
   docFiles: string[];
   // Step 3
@@ -284,21 +286,39 @@ function Step1({ draft, update }: { draft: ListingDraft; update: (p: Partial<Lis
 const SLOT_COUNT = 5;
 const MIN_PHOTOS = 3;
 
-function Step2({ draft, update }: { draft: ListingDraft; update: (p: Partial<ListingDraft>) => void }) {
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+function Step2({ draft, update, addPhoto, uploading, setUploading }: {
+  draft: ListingDraft;
+  update: (p: Partial<ListingDraft>) => void;
+  addPhoto: (url: string) => void;
+  uploading: number;
+  setUploading: React.Dispatch<React.SetStateAction<number>>;
+}) {
   const dropRef   = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
   const videoRef  = useRef<HTMLInputElement>(null);
   const docRef    = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
+  // Each photo uploads to storage straight away; the slot shows it once it's saved
   const loadFiles = (files: FileList | null) => {
     if (!files) return;
-    const remaining = SLOT_COUNT - draft.photos.length;
-    const urls: string[] = [];
-    Array.from(files).slice(0, remaining).forEach((f) => {
-      if (f.type.startsWith('image/')) urls.push(URL.createObjectURL(f));
-    });
-    if (urls.length) update({ photos: [...draft.photos, ...urls] });
+    setUploadError('');
+    const remaining = SLOT_COUNT - draft.photos.length - uploading;
+    const images = Array.from(files).filter((f) => f.type.startsWith('image/')).slice(0, Math.max(remaining, 0));
+    const tooBig = images.filter((f) => f.size > MAX_PHOTO_BYTES);
+    if (tooBig.length) setUploadError(`${tooBig.map((f) => f.name).join(', ')} is over 5 MB and was skipped.`);
+
+    for (const file of images.filter((f) => f.size <= MAX_PHOTO_BYTES)) {
+      setUploading((n) => n + 1);
+      listingsApi.uploadPhoto(file).then((result) => {
+        setUploading((n) => n - 1);
+        if (result.ok) addPhoto(result.data.url);
+        else setUploadError(`${file.name}: ${result.error}`);
+      });
+    }
   };
 
   const onDrop = (e: React.DragEvent) => {
@@ -321,8 +341,10 @@ function Step2({ draft, update }: { draft: ListingDraft; update: (p: Partial<Lis
     update({ docFiles: [...draft.docFiles, ...names] });
   };
 
-  // Build 5-slot array
-  const slots = Array.from({ length: SLOT_COUNT }, (_, i) => draft.photos[i] ?? null);
+  // Build 5-slot array: saved photos first, then slots still uploading
+  const slots = Array.from({ length: SLOT_COUNT }, (_, i) =>
+    draft.photos[i] ?? (i < draft.photos.length + uploading ? UPLOADING : null),
+  );
   const required = slots.slice(0, MIN_PHOTOS);
   const optional = slots.slice(MIN_PHOTOS);
 
@@ -355,15 +377,21 @@ function Step2({ draft, update }: { draft: ListingDraft; update: (p: Partial<Lis
           <p className="text-sm font-bold text-gray-800">
             {draft.photos.length >= SLOT_COUNT ? 'All photo slots filled' : 'Drag photos here or click to upload'}
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">JPG or PNG, up to 10MB each</p>
+          <p className="text-xs text-gray-400 mt-0.5">JPG, PNG or WebP, up to 5 MB each</p>
         </div>
         <button type="button" onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
           className="h-10 px-6 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors">
           Choose Photos
         </button>
       </div>
-      <input ref={inputRef} type="file" accept="image/*" multiple className="sr-only"
-        onChange={(e) => loadFiles(e.target.files)} />
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only"
+        onChange={(e) => { loadFiles(e.target.files); e.target.value = ''; }} />
+
+      {uploadError && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3" role="alert">
+          {uploadError}
+        </p>
+      )}
 
       {/* Photo Slots */}
       <div>
@@ -433,11 +461,23 @@ function Step2({ draft, update }: { draft: ListingDraft; update: (p: Partial<Lis
   );
 }
 
+/* Marks a slot whose photo is still uploading */
+const UPLOADING = '__uploading__';
+
 /* Photo slot tile */
 function PhotoSlot({ url, label, required, onAdd, onRemove }: {
   url: string | null; label: string; required: boolean;
   onAdd: () => void; onRemove: () => void;
 }) {
+  if (url === UPLOADING) {
+    return (
+      <div className="relative aspect-square rounded-xl border-2 border-orange-200 bg-orange-50/60 flex flex-col items-center justify-center gap-1.5"
+        role="status" aria-label="Uploading photo">
+        <div className="h-6 w-6 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
+        <span className="text-[11px] font-medium text-orange-600">Uploading…</span>
+      </div>
+    );
+  }
   return (
     <div className={`relative aspect-square rounded-xl border-2 overflow-hidden flex flex-col items-center justify-center transition-all ${
       url
@@ -803,9 +843,40 @@ function canProceed(step: number, draft: ListingDraft): boolean {
     if (QUANTITY_CATS.has(draft.category)) return base && !!draft.quantity;
     return base;
   }
-  if (step === 2) return draft.photos.length >= MIN_PHOTOS;
+  if (step === 2) return draft.photos.length >= MIN_PHOTOS;  // uploads in progress aren't in photos yet
   if (step === 3) return !!draft.dailyPrice && Number(draft.dailyPrice) > 0;
   return false;
+}
+
+/** "12,500" → 12500; blank or invalid → null */
+function toAmount(value: string): number | null {
+  const n = Number(value.replace(/[,\s₦]/g, ''));
+  return value.trim() && Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
+}
+
+function toListingInput(draft: ListingDraft, action: 'draft' | 'submit'): NewListingInput {
+  return {
+    action,
+    title: draft.name,
+    category: draft.category,
+    subcategory: draft.subcategory,
+    description: draft.description,
+    details: {
+      brand: draft.brand,
+      model: draft.model,
+      condition: draft.condition,
+      size: draft.size,
+      quantity: toAmount(draft.quantity) || null,
+    },
+    photos: draft.photos,
+    pricing: {
+      hourly: draft.hourlyEnabled ? toAmount(draft.hourlyPrice) : null,
+      daily: toAmount(draft.dailyPrice),
+      weekly: toAmount(draft.weeklyPrice),
+      securityDeposit: toAmount(draft.securityDeposit),
+    },
+    unavailableDates: [...draft.unavailableDates].sort(),
+  };
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -815,11 +886,34 @@ export default function NewListingPage() {
   const [step, setStep]           = useState(1);
   const [draft, setDraft]         = useState<ListingDraft>(EMPTY);
   const [saving, setSaving]       = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  // The saved listing's status decides the success message (live vs. awaiting review)
+  const [submitted, setSubmitted] = useState<ListingStatus | null>(null);
+  const [uploading, setUploading] = useState(0);
+  const [saveError, setSaveError] = useState('');
+  const [draftSaved, setDraftSaved] = useState(false);
 
   const update = useCallback((patch: Partial<ListingDraft>) => {
     setDraft((prev) => ({ ...prev, ...patch }));
+    setDraftSaved(false);
   }, []);
+
+  // Functional update so photos finishing at the same time don't overwrite each other
+  const addPhoto = useCallback((url: string) => {
+    setDraft((prev) => ({ ...prev, photos: [...prev.photos, url].slice(0, SLOT_COUNT) }));
+  }, []);
+
+  const save = async (action: 'draft' | 'submit') => {
+    setSaveError('');
+    setSaving(true);
+    const result = await listingsApi.create(toListingInput(draft, action));
+    setSaving(false);
+    if (!result.ok) {
+      setSaveError(result.error);
+      return;
+    }
+    if (action === 'draft') setDraftSaved(true);
+    else setSubmitted(result.data.listing.status);
+  };
 
   const scrollTop = () => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -831,15 +925,8 @@ export default function NewListingPage() {
     else handlePublish();
   };
 
-  const handleSaveDraft = () => {
-    setSaving(true);
-    setTimeout(() => setSaving(false), 800);
-  };
-
-  const handlePublish = () => {
-    setSaving(true);
-    setTimeout(() => { setSaving(false); setSubmitted(true); }, 1500);
-  };
+  const handleSaveDraft = () => void save('draft');
+  const handlePublish = () => void save('submit');
 
   const ctaLabel = saving ? 'Saving…' :
     step === 1 ? 'Continue to Photos' :
@@ -853,17 +940,28 @@ export default function NewListingPage() {
         <div className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
           <CheckCircle2 className="h-10 w-10 text-emerald-500" />
         </div>
-        <h2 className="text-2xl font-extrabold text-gray-900">Listing submitted!</h2>
-        <p className="text-sm text-gray-500 mt-2 max-w-sm leading-relaxed">
-          Your listing for <strong>{draft.name}</strong> has been submitted for review.
-          Most listings are approved within 24 hours. We'll notify you by email and SMS.
-        </p>
+        {submitted === 'active' ? (
+          <>
+            <h2 className="text-2xl font-extrabold text-gray-900">Your listing is live!</h2>
+            <p className="text-sm text-gray-500 mt-2 max-w-sm leading-relaxed">
+              <strong>{draft.name}</strong> is published and visible to renters.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl font-extrabold text-gray-900">Listing submitted!</h2>
+            <p className="text-sm text-gray-500 mt-2 max-w-sm leading-relaxed">
+              Your listing for <strong>{draft.name}</strong> has been submitted for review.
+              Most listings are approved within 24 hours. We&apos;ll notify you by email and SMS.
+            </p>
+          </>
+        )}
         <div className="mt-8 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Link href="/dashboard/listings"
             className="flex-1 sm:flex-none inline-flex items-center justify-center h-11 px-6 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors">
             View My Listings
           </Link>
-          <button onClick={() => { setDraft(EMPTY); setStep(1); setSubmitted(false); }}
+          <button onClick={() => { setDraft(EMPTY); setStep(1); setSubmitted(null); }}
             className="flex-1 sm:flex-none h-11 px-6 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
             Create Another
           </button>
@@ -892,9 +990,17 @@ export default function NewListingPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-5 sm:p-7">
           {step === 1 && <Step1 draft={draft} update={update} />}
-          {step === 2 && <Step2 draft={draft} update={update} />}
+          {step === 2 && (
+            <Step2 draft={draft} update={update} addPhoto={addPhoto} uploading={uploading} setUploading={setUploading} />
+          )}
           {step === 3 && <Step3 draft={draft} update={update} />}
         </div>
+
+        {saveError && (
+          <p className="mx-5 sm:mx-7 mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3" role="alert">
+            {saveError}
+          </p>
+        )}
 
         {/* Footer */}
         <div className="border-t border-gray-100 px-5 sm:px-7 py-4 flex items-center justify-between gap-3 bg-gray-50/60">
@@ -911,9 +1017,9 @@ export default function NewListingPage() {
           )}
 
           <div className="flex items-center gap-4">
-            <button type="button" onClick={handleSaveDraft}
-              className="text-sm font-semibold text-gray-600 hover:text-gray-900 underline underline-offset-2 transition-colors">
-              {saving ? 'Saving…' : 'Save as Draft'}
+            <button type="button" onClick={handleSaveDraft} disabled={saving || uploading > 0}
+              className="text-sm font-semibold text-gray-600 hover:text-gray-900 underline underline-offset-2 transition-colors disabled:opacity-50">
+              {saving ? 'Saving…' : draftSaved ? 'Draft saved ✓' : 'Save as Draft'}
             </button>
             <button type="button" onClick={proceed}
               disabled={!canProceed(step, draft) || saving}

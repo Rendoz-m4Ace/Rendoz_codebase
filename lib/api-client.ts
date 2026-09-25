@@ -3,6 +3,8 @@
  * Auth tokens live in httpOnly cookies, so every call just sends cookies along.
  */
 
+import type { Listing } from '@/lib/listings';
+
 export type ApiRole = 'renter' | 'owner' | 'admin';
 
 /** User as returned by the API (the DB row without password_hash). */
@@ -50,6 +52,43 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResu
 
 const post = <T>(path: string, body?: unknown) =>
   request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
+
+// ── Listings ────────────────────────────────────────────────────────────────
+
+export interface NewListingInput {
+  action: 'draft' | 'submit';
+  title: string;
+  category: string;
+  subcategory: string;
+  description: string;
+  details: { brand: string; model: string; condition: string; size: string; quantity: number | null };
+  photos: string[];
+  pricing: { hourly: number | null; daily: number | null; weekly: number | null; securityDeposit: number | null };
+  unavailableDates: string[];
+}
+
+export const listingsApi = {
+  mine: () => request<{ listings: Listing[] }>('/api/listings'),
+
+  create: (input: NewListingInput) => post<{ listing: Listing }>('/api/listings', input),
+
+  /** Uploads one photo; resolves to its public URL. Sent as multipart, so it skips the JSON helper. */
+  async uploadPhoto(file: File): Promise<ApiResult<{ url: string }>> {
+    const form = new FormData();
+    form.append('photo', file);
+    let res: Response;
+    try {
+      res = await fetch('/api/listings/photos', { method: 'POST', body: form, credentials: 'same-origin' });
+    } catch {
+      return { ok: false, status: 0, error: 'Network error. Check your connection and try again.' };
+    }
+    const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+    if (!res.ok || !body.url) {
+      return { ok: false, status: res.status, error: body.error ?? 'Upload failed. Please try again.' };
+    }
+    return { ok: true, data: { url: body.url } };
+  },
+};
 
 type UserResponse = { message?: string; user: ApiUser };
 type MessageResponse = { message: string };
