@@ -25,6 +25,7 @@ env:
     EMAIL_ENABLED: ${{ secrets.EMAIL_ENABLED }}
     RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
     EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+    ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
 jobs:
     Deploy-Production:
@@ -33,17 +34,24 @@ jobs:
             - name: Checkout Code
               uses: actions/checkout@v4
 
-            - name: Check Required Secrets
-              # Prints only the names of missing secrets, never their values
+            - name: Check Secrets
+              # Prints only secret names, never values. Sign-in can't work without the required
+              # ones; missing optional ones only switch off waitlist/admin/email/assistant.
               run: |
                   missing=0
                   for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID \
                               SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY \
-                              JWT_ACCESS_SECRET JWT_REFRESH_SECRET \
-                              UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN ADMIN_PASSWORD; do
+                              JWT_ACCESS_SECRET JWT_REFRESH_SECRET; do
                       if [ -z "${!name}" ]; then
-                          echo "::error::Missing GitHub secret: $name"
+                          echo "::error::Missing required GitHub secret: $name"
                           missing=1
+                      else
+                          echo "✓ $name is set"
+                      fi
+                  done
+                  for name in $OPTIONAL_VARS; do
+                      if [ -z "${!name}" ]; then
+                          echo "::warning::Optional GitHub secret not set: $name (any existing Vercel value is kept)"
                       else
                           echo "✓ $name is set"
                       fi
@@ -55,6 +63,43 @@ jobs:
                   exit $missing
               env:
                   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+                  OPTIONAL_VARS: UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN ADMIN_PASSWORD EMAIL_ENABLED RESEND_API_KEY EMAIL_FROM ANTHROPIC_API_KEY
+
+            - name: Copy Secrets to Vercel Environment Variables
+              # Upserts each GitHub secret into the Vercel project's Production environment, so it
+              # shows under Vercel → Project → Settings → Environment Variables and applies to this
+              # and future deploys. Secrets not set in GitHub are skipped, keeping any Vercel value.
+              run: |
+                  api="https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/env?upsert=true"
+                  case "$VERCEL_ORG_ID" in team_*) api="$api&teamId=$VERCEL_ORG_ID" ;; esac
+                  failed=0
+                  for name in $SYNC_VARS; do
+                      value="${!name}"
+                      if [ -z "$value" ]; then
+                          echo "– $name not set in GitHub, skipped"
+                          continue
+                      fi
+                      body=$(jq -n --arg key "$name" --arg value "$value" \
+                          '{key: $key, value: $value, type: "encrypted", target: ["production"]}')
+                      status=$(curl -sS -o response.json -w "%{http_code}" -X POST "$api" \
+                          -H "Authorization: Bearer $VERCEL_TOKEN" \
+                          -H "Content-Type: application/json" \
+                          --data "$body")
+                      if [ "$status" -ge 200 ] && [ "$status" -lt 300 ]; then
+                          echo "✓ $name copied to Vercel"
+                      else
+                          echo "::error::Copying $name failed (HTTP $status): $(jq -r '.error.message // "unknown error"' response.json)"
+                          failed=1
+                      fi
+                  done
+                  rm -f response.json
+                  exit $failed
+              env:
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+                  SYNC_VARS: >-
+                      SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY JWT_ACCESS_SECRET JWT_REFRESH_SECRET
+                      UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN ADMIN_PASSWORD
+                      EMAIL_ENABLED RESEND_API_KEY EMAIL_FROM ANTHROPIC_API_KEY
 
             - name: Install Node.js
               uses: actions/setup-node@v4
@@ -65,24 +110,11 @@ jobs:
               run: npm install --global vercel@latest
 
             - name: Pull Vercel Project Settings
+              # Includes the variables copied above
               run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
             - name: Build Project Artifacts
-              # The job-level env above is visible to the build
               run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
             - name: Deploy Project Artifacts to Vercel
-              # --env hands the secrets to the deployed API routes at runtime.
-              # Optional values are only sent when set, so Vercel-side values are not blanked.
-              run: |
-                  args=()
-                  for name in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY \
-                              JWT_ACCESS_SECRET JWT_REFRESH_SECRET \
-                              UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN ADMIN_PASSWORD \
-                              EMAIL_ENABLED RESEND_API_KEY EMAIL_FROM; do
-                      if [ -n "${!name}" ]; then
-                          args+=(--env "$name=${!name}")
-                          echo "→ passing $name to the deployment"
-                      fi
-                  done
-                  vercel deploy --prebuilt --archive=tgz --prod "${args[@]}" --token=${{ secrets.VERCEL_TOKEN }}
+              run: vercel deploy --prebuilt --archive=tgz --prod --token=${{ secrets.VERCEL_TOKEN }}
